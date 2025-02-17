@@ -3,7 +3,7 @@ import { QuestionAnalyzer } from './utils/questionAnalyzer';
 import { delay, shouldRetry } from './utils/aiClient';
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // 1秒
+const RETRY_DELAY = 1000; // 1秒a 
 
 // 创建 Orchestrator 实例
 const orchestrator = new AnalysisOrchestrator();
