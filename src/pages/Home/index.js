@@ -21,11 +21,24 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
   borderBottom: `1px solid ${theme.palette.divider}`,
 }));
 
-const Logo = styled('div')(({ theme }) => ({
-  fontFamily: 'Helvetica Neue',
-  fontSize: '24px',
-  color: theme.palette.primary.main,
-  fontWeight: 'bold',
+const Logo = styled('img')({
+  height: '40px',
+  cursor: 'pointer',
+});
+
+const MiniLogo = styled('img')(({ theme }) => ({
+  width: '80px',
+  height: '80px',
+  marginBottom: theme.spacing(3),
+  animation: 'float 6s ease-in-out infinite',
+  '@keyframes float': {
+    '0%, 100%': {
+      transform: 'translateY(0)',
+    },
+    '50%': {
+      transform: 'translateY(-10px)',
+    },
+  },
 }));
 
 const SearchContainer = styled(Box)(({ theme }) => ({
@@ -58,7 +71,7 @@ function Home() {
     <Box>
       <StyledAppBar position="static">
         <Toolbar>
-          <Logo>Godar</Logo>
+          <Logo src="/logo.jpg" alt="Godar" />
           <Box sx={{ flexGrow: 1 }} />
           <Button onClick={toggleLanguage}>{t('nav.language')}</Button>
           <Button color="primary">{t('nav.login')}</Button>
@@ -70,6 +83,7 @@ function Home() {
 
       <Container maxWidth="lg">
         <SearchContainer>
+          <MiniLogo src="/logo_mini.jpg" alt="Godar Mascot" />
           <Typography variant="h4" gutterBottom>
             {t('home.welcome')}
           </Typography>
