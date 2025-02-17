@@ -1,63 +1,74 @@
-import axios from 'axios';
+import { AnalysisOrchestrator } from './orchestrator/AnalysisOrchestrator';
+import { QuestionAnalyzer } from './utils/questionAnalyzer';
+import { delay, shouldRetry } from './utils/aiClient';
 
-const API_BASE_URL = 'https://api.fast-tunnel.one';
-const API_KEY = 'sk-YT7uKeBySL3G9rjG5bDbC08131Dd476aA7151c5cF0810d35';
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1秒
 
-const aiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Authorization': `Bearer ${API_KEY}`,
-    'Content-Type': 'application/json',
-  },
-  timeout: 10000, // 10秒超时
-});
+// 创建 Orchestrator 实例
+const orchestrator = new AnalysisOrchestrator();
 
-// 延迟函数
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// 检查是否应该重试
-const shouldRetry = (error) => {
-  const status = error.response?.status;
-  return (
-    status === 503 || // 服务不可用
-    status === 429 || // 请求过多
-    status === 500 || // 服务器错误
-    !status // 网络错误
-  );
-};
-
-export const askQuestion = async (question, retryCount = 0) => {
+/**
+ * 问答函数
+ * @param {string} question - 用户问题
+ * @returns {Promise<Object>} - 回答结果
+ */
+export async function askQuestion(question, retryCount = 0) {
   try {
-    const response = await aiClient.post('/v1/chat/completions', {
-      model: 'o1-mini',
-      messages: [
-        {
-          role: 'system',
-          content: '你是一个专业的跨境信息分析助手，请用简洁专业的语言回答用户的问题。',
-        },
-        {
-          role: 'user',
-          content: question,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    // 思考过程的动态展示
+    const thinkingProcess = {
+      start: '🧠 正在启动分析引擎...',
+      region: '🌏 正在定位目标区域...',
+      concept: '🔍 正在识别核心概念...',
+      industry: '🏢 正在分析所属行业...',
+      research: '📚 正在检索相关研究...',
+      solution: '💡 正在生成解决方案...',
+      providers: '🤝 正在匹配优质服务商...',
+      complete: '✨ 分析完成，正在生成报告...'
+    };
 
-    const answer = response.data?.choices?.[0]?.message?.content;
+    // 解析输入
+    console.log(thinkingProcess.start);
+    const { region, question: userQuestion } = QuestionAnalyzer.parseInput(question);
+    console.log(thinkingProcess.region, `已确认分析区域：${region}`);
     
-    if (!answer) {
-      throw new Error('未收到有效的回答');
-    }
+    // 分析问题
+    console.log(thinkingProcess.concept);
+    const { concepts, industry } = await QuestionAnalyzer.analyze(userQuestion);
+    console.log(`已识别核心概念：${concepts}`);
+    console.log(thinkingProcess.industry, `已确认所属行业：${industry}`);
+    
+    // 收集信息
+    console.log(thinkingProcess.research);
+    const explanation = await QuestionAnalyzer.getConceptExplanation(concepts);
+    
+    console.log(thinkingProcess.solution);
+    const analysis = await QuestionAnalyzer.getRegionalAnalysis(concepts, region);
+    
+    console.log(thinkingProcess.providers);
+    const [period, providers] = await Promise.all([
+      QuestionAnalyzer.getImplementationPeriod(concepts, region),
+      QuestionAnalyzer.getServiceProviders(industry, region)
+    ]);
+
+    console.log(thinkingProcess.complete);
+
+    // 组合最终结果
+    const answer = combineResults({
+      concepts,
+      industry,
+      explanation,
+      analysis,
+      period,
+      providers
+    });
 
     return {
       success: true,
-      answer: answer,
+      answer,
     };
   } catch (error) {
-    console.error('AI 服务错误:', error);
+    console.error('❌ AI 服务错误:', error);
 
     // 检查是否应该重试
     if (retryCount < MAX_RETRIES && shouldRetry(error)) {
@@ -97,4 +108,76 @@ export const askQuestion = async (question, retryCount = 0) => {
       retryCount,
     };
   }
-}; 
+}
+
+// 组合最终结果
+function combineResults(results) {
+  const { concepts, industry, explanation, analysis, period, providers } = results;
+  
+  // 根据问题类型选择不同的输出格式
+  if (concepts.includes('物流') || industry.includes('物流')) {
+    return `
+📊 物流方案分析报告
+
+运输方案：
+${analysis}
+
+时效评估：
+${period}
+
+成本估算：
+${providers}
+
+建议方案：
+${explanation}
+
+注意事项：
+- 以上方案基于当前市场情况，建议实时关注市场变化
+- 具体实施时需要考虑货物特性和季节性因素
+- 建议与多家服务商进行详细询价和商谈`;
+  }
+  
+  if (concepts.includes('法律') || industry.includes('法律')) {
+    return `
+⚖️ 法律合规分析报告
+
+适用法规：
+${explanation}
+
+合规要求：
+${analysis}
+
+风险分析：
+${period}
+
+建议措施：
+${providers}
+
+重要提醒：
+- 本分析仅供参考，具体问题请咨询专业律师
+- 法律法规可能随时更新，请关注最新政策
+- 建议建立合规管理制度和风险预警机制`;
+  }
+  
+  // 默认商务分析格式
+  return `
+💼 商业解决方案
+
+市场分析：
+${explanation}
+
+解决方案：
+${analysis}
+
+实施周期：
+${period}
+
+推荐资源：
+${providers}
+
+执行建议：
+- 建议先进行小规模试点，验证方案可行性
+- 密切关注市场动态，及时调整策略
+- 做好风险管理，建立应急预案
+- 重视团队建设和人才储备`;
+} 
