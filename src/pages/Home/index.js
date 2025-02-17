@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { styled } from '@mui/material/styles';
 import {
@@ -14,6 +14,8 @@ import {
 import SearchIcon from '@mui/icons-material/Search';
 import ExpertsList from '../../components/ExpertsList';
 import CommentsList from '../../components/CommentsList';
+import ChatBox from '../../components/ChatBox';
+import { askQuestion } from '../../services/ai';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   background: 'transparent',
@@ -62,9 +64,53 @@ const SearchField = styled(TextField)(({ theme }) => ({
 
 function Home() {
   const { t, i18n } = useTranslation();
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [question, setQuestion] = useState('');
+  const [retrying, setRetrying] = useState(false);
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'en' ? 'zh' : 'en');
+  };
+
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    if (!question.trim() || loading) return;
+
+    const userMessage = { isUser: true, content: question.trim() };
+    setMessages(prev => [...prev, userMessage]);
+    setLoading(true);
+    setRetrying(false);
+
+    try {
+      const response = await askQuestion(question);
+      
+      if (response.retryCount > 0) {
+        setRetrying(true);
+      }
+
+      if (response.success && response.answer) {
+        const aiMessage = { isUser: false, content: response.answer };
+        setMessages(prev => [...prev, aiMessage]);
+      } else {
+        const errorMessage = { 
+          isUser: false, 
+          content: response.error
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      console.error('问答出错:', error);
+      const errorMessage = { 
+        isUser: false, 
+        content: '抱歉，服务出现问题，请稍后再试。'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setLoading(false);
+      setQuestion('');
+      setRetrying(false);
+    }
   };
 
   return (
@@ -90,19 +136,23 @@ function Home() {
           <Typography variant="body1" color="text.secondary" gutterBottom>
             {t('home.subtitle')}
           </Typography>
-          <Box sx={{ width: '100%', mt: 4 }}>
+          <Box sx={{ width: '100%', mt: 4 }} component="form" onSubmit={handleSearch}>
             <SearchField
+              value={question}
+              onChange={(e) => setQuestion(e.target.value)}
               placeholder={t('home.searchPlaceholder')}
               variant="outlined"
+              disabled={loading}
               InputProps={{
                 endAdornment: (
-                  <IconButton>
+                  <IconButton type="submit" disabled={loading}>
                     <SearchIcon />
                   </IconButton>
                 ),
               }}
             />
           </Box>
+          <ChatBox messages={messages} loading={loading} retrying={retrying} />
         </SearchContainer>
 
         <ExpertsList />
