@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "login": "登录",
+    "register": "注册",
+    "language": "中文/EN"
+  },
+  "home": {
+    "welcome": "我是 Co-X，很高兴见到你！",
+    "subtitle": "有什么想了解的问题呢，来跟的们聊聊~",
+    "searchPlaceholder": "输入Q-X想提供帮助"
+  },
+  "experts": {
+    "title": "注册跨境专家",
+    "specialty": {
+      "gynecology": "妇科医生",
+      "dentistry": "牙医"
+    }
+  },
+  "comments": {
+    "title": "用户评论",
+    "viewMore": "查看更多评论"
+  }
+} 

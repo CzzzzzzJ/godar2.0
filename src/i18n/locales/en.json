@@ -1,0 +1,23 @@
+{
+  "nav": {
+    "login": "Login",
+    "register": "Register",
+    "language": "中文/EN"
+  },
+  "home": {
+    "welcome": "I'm Co-X, nice to meet you!",
+    "subtitle": "What would you like to know? Let's chat!",
+    "searchPlaceholder": "Enter what Q-X can help with"
+  },
+  "experts": {
+    "title": "Registered Cross-border Experts",
+    "specialty": {
+      "gynecology": "Gynecologist",
+      "dentistry": "Dentist"
+    }
+  },
+  "comments": {
+    "title": "User Comments",
+    "viewMore": "View More Comments"
+  }
+} 
