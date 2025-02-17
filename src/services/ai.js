@@ -17,26 +17,25 @@ export async function askQuestion(question, retryCount = 0) {
   try {
     // 思考过程的动态展示
     const thinkingProcess = {
-      start: '🧠 正在启动分析引擎...',
-      region: '🌏 正在定位目标区域...',
-      concept: '🔍 正在识别核心概念...',
-      industry: '🏢 正在分析所属行业...',
-      research: '📚 正在检索相关研究...',
-      solution: '💡 正在生成解决方案...',
-      providers: '🤝 正在匹配优质服务商...',
-      complete: '✨ 分析完成，正在生成报告...'
+      start: '🤖 让我想想...',
+      region: '🌏 正在分析目标区域',
+      concept: '🔍 正在理解核心概念',
+      industry: '🏢 正在识别相关行业',
+      research: '📚 正在检索研究资料',
+      solution: '💡 正在生成解决方案',
+      providers: '🤝 正在匹配服务商',
+      complete: '✨ 分析完成，正在整理报告'
     };
 
     // 解析输入
     console.log(thinkingProcess.start);
     const { region, question: userQuestion } = QuestionAnalyzer.parseInput(question);
-    console.log(thinkingProcess.region, `已确认分析区域：${region}`);
+    console.log(thinkingProcess.region);
     
     // 分析问题
     console.log(thinkingProcess.concept);
     const { concepts, industry } = await QuestionAnalyzer.analyze(userQuestion);
-    console.log(`已识别核心概念：${concepts}`);
-    console.log(thinkingProcess.industry, `已确认所属行业：${industry}`);
+    console.log(thinkingProcess.industry);
     
     // 收集信息
     console.log(thinkingProcess.research);
@@ -46,10 +45,7 @@ export async function askQuestion(question, retryCount = 0) {
     const analysis = await QuestionAnalyzer.getRegionalAnalysis(concepts, region);
     
     console.log(thinkingProcess.providers);
-    const [period, providers] = await Promise.all([
-      QuestionAnalyzer.getImplementationPeriod(concepts, region),
-      QuestionAnalyzer.getServiceProviders(industry, region)
-    ]);
+    const providers = await QuestionAnalyzer.getServiceProviders(industry, region);
 
     console.log(thinkingProcess.complete);
 
@@ -59,7 +55,6 @@ export async function askQuestion(question, retryCount = 0) {
       industry,
       explanation,
       analysis,
-      period,
       providers
     });
 
@@ -112,23 +107,26 @@ export async function askQuestion(question, retryCount = 0) {
 
 // 组合最终结果
 function combineResults(results) {
-  const { concepts, industry, explanation, analysis, period, providers } = results;
+  const { concepts, industry, explanation, analysis, providers } = results;
   
   // 根据问题类型选择不同的输出格式
   if (concepts.includes('物流') || industry.includes('物流')) {
     return `
 📊 物流方案分析报告
 
-运输方案：
+核心概念：
+${concepts}
+
+所属行业：
+${industry}
+
+方案分析：
 ${analysis}
 
-时效评估：
-${period}
-
-成本估算：
+服务推荐：
 ${providers}
 
-建议方案：
+市场解读：
 ${explanation}
 
 注意事项：
@@ -141,16 +139,19 @@ ${explanation}
     return `
 ⚖️ 法律合规分析报告
 
-适用法规：
+核心概念：
+${concepts}
+
+所属行业：
+${industry}
+
+法规解读：
 ${explanation}
 
-合规要求：
+合规分析：
 ${analysis}
 
-风险分析：
-${period}
-
-建议措施：
+推荐服务：
 ${providers}
 
 重要提醒：
@@ -163,14 +164,17 @@ ${providers}
   return `
 💼 商业解决方案
 
+核心概念：
+${concepts}
+
+所属行业：
+${industry}
+
 市场分析：
 ${explanation}
 
 解决方案：
 ${analysis}
-
-实施周期：
-${period}
 
 推荐资源：
 ${providers}

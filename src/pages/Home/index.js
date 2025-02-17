@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { styled } from '@mui/material/styles';
 import {
@@ -93,12 +93,33 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState('');
   const [retrying, setRetrying] = useState(false);
+  const [thinkingStep, setThinkingStep] = useState('');
 
   const hasMessages = messages.length > 0 || loading;
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'en' ? 'zh' : 'en');
   };
+
+  // 监听控制台日志的函数
+  const handleConsoleLog = (event) => {
+    const { detail } = event;
+    if (typeof detail === 'string' && 
+        (detail.includes('🤖') || detail.includes('🌏') || 
+         detail.includes('🔍') || detail.includes('🏢') || 
+         detail.includes('📚') || detail.includes('💡') || 
+         detail.includes('🤝') || detail.includes('✨'))) {
+      setThinkingStep(detail);
+    }
+  };
+
+  // 添加和移除控制台日志监听器
+  useEffect(() => {
+    window.addEventListener('console-log', handleConsoleLog);
+    return () => {
+      window.removeEventListener('console-log', handleConsoleLog);
+    };
+  }, []);
 
   const handleSearch = async (e) => {
     e.preventDefault();
@@ -108,9 +129,21 @@ function Home() {
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
     setRetrying(false);
+    setThinkingStep('');
 
     try {
+      // 重写 console.log 来捕获思考过程
+      const originalConsoleLog = console.log;
+      console.log = (...args) => {
+        originalConsoleLog.apply(console, args);
+        const message = args.join(' ');
+        window.dispatchEvent(new CustomEvent('console-log', { detail: message }));
+      };
+
       const response = await askQuestion(question);
+      
+      // 恢复原始的 console.log
+      console.log = originalConsoleLog;
       
       if (response.retryCount > 0) {
         setRetrying(true);
@@ -137,6 +170,7 @@ function Home() {
       setLoading(false);
       setQuestion('');
       setRetrying(false);
+      setThinkingStep('');
     }
   };
 
@@ -206,7 +240,12 @@ function Home() {
                 }}
               />
             </SearchFieldContainer>
-            <ChatBox messages={messages} loading={loading} retrying={retrying} />
+            <ChatBox 
+              messages={messages} 
+              loading={loading} 
+              retrying={retrying}
+              thinkingStep={thinkingStep}
+            />
           </ContentContainer>
         </SearchContainer>
 
