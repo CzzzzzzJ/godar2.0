@@ -1,11 +1,11 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Godar",
+  "name": "Godar - 跨境信息分析AI问答工具",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "logo_mini.jpg",
       "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "type": "image/jpg"
     },
     {
       "src": "logo192.png",
@@ -20,6 +20,17 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#4B6455",
+  "background_color": "#ffffff",
+  "description": "专业的跨境信息分析AI问答工具，为您提供准确、及时的跨境咨询服务。",
+  "lang": "zh-CN",
+  "categories": ["business", "productivity", "utilities"],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ],
+  "prefer_related_applications": false
 }

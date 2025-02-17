@@ -41,26 +41,51 @@ const MiniLogo = styled('img')(({ theme }) => ({
       transform: 'translateY(-10px)',
     },
   },
+  transition: 'transform 0.3s ease-in-out',
 }));
 
 const SearchContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  justifyContent: 'center',
+  justifyContent: 'flex-start',
   minHeight: '400px',
   textAlign: 'center',
   marginBottom: theme.spacing(6),
+  position: 'relative',
+  paddingTop: theme.spacing(6),
 }));
 
 const SearchField = styled(TextField)(({ theme }) => ({
   width: '100%',
   maxWidth: '600px',
+  margin: '0 auto',
   '& .MuiOutlinedInput-root': {
     borderRadius: theme.shape.borderRadius * 3,
     backgroundColor: theme.palette.background.paper,
+    transition: 'all 0.3s ease-in-out',
+    '&.Mui-focused': {
+      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    },
   },
 }));
+
+const ContentContainer = styled(Box)(({ theme, hasMessages }) => ({
+  width: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  transition: 'all 0.3s ease-in-out',
+  marginTop: hasMessages ? theme.spacing(2) : theme.spacing(4),
+}));
+
+const SearchFieldContainer = styled(Box)({
+  width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
+  maxWidth: '600px',
+  margin: '0 auto',
+});
 
 function Home() {
   const { t, i18n } = useTranslation();
@@ -68,6 +93,8 @@ function Home() {
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState('');
   const [retrying, setRetrying] = useState(false);
+
+  const hasMessages = messages.length > 0 || loading;
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'en' ? 'zh' : 'en');
@@ -129,30 +156,58 @@ function Home() {
 
       <Container maxWidth="lg">
         <SearchContainer>
-          <MiniLogo src="/logo_mini.jpg" alt="Godar Mascot" />
-          <Typography variant="h4" gutterBottom>
+          <MiniLogo 
+            src="/logo_mini.jpg" 
+            alt="Godar Mascot"
+            sx={{ 
+              transform: hasMessages ? 'scale(0.8)' : 'scale(1)',
+            }}
+          />
+          <Typography 
+            variant="h4" 
+            gutterBottom
+            sx={{ 
+              fontSize: hasMessages ? '1.5rem' : '2rem',
+              transition: 'all 0.3s ease-in-out',
+              mb: hasMessages ? 1 : 2,
+            }}
+          >
             {t('home.welcome')}
           </Typography>
-          <Typography variant="body1" color="text.secondary" gutterBottom>
+          <Typography 
+            variant="body1" 
+            color="text.secondary" 
+            gutterBottom
+            sx={{ 
+              opacity: hasMessages ? 0 : 1,
+              height: hasMessages ? 0 : 'auto',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease-in-out',
+              mb: hasMessages ? 0 : 2,
+            }}
+          >
             {t('home.subtitle')}
           </Typography>
-          <Box sx={{ width: '100%', mt: 4 }} component="form" onSubmit={handleSearch}>
-            <SearchField
-              value={question}
-              onChange={(e) => setQuestion(e.target.value)}
-              placeholder={t('home.searchPlaceholder')}
-              variant="outlined"
-              disabled={loading}
-              InputProps={{
-                endAdornment: (
-                  <IconButton type="submit" disabled={loading}>
-                    <SearchIcon />
-                  </IconButton>
-                ),
-              }}
-            />
-          </Box>
-          <ChatBox messages={messages} loading={loading} retrying={retrying} />
+          <ContentContainer hasMessages={hasMessages}>
+            <SearchFieldContainer component="form" onSubmit={handleSearch}>
+              <SearchField
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                placeholder={t('home.searchPlaceholder')}
+                variant="outlined"
+                disabled={loading}
+                fullWidth
+                InputProps={{
+                  endAdornment: (
+                    <IconButton type="submit" disabled={loading}>
+                      <SearchIcon />
+                    </IconButton>
+                  ),
+                }}
+              />
+            </SearchFieldContainer>
+            <ChatBox messages={messages} loading={loading} retrying={retrying} />
+          </ContentContainer>
         </SearchContainer>
 
         <ExpertsList />
