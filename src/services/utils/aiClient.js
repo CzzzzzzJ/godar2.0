@@ -37,32 +37,43 @@ aiClient.interceptors.response.use(
  */
 export async function callAI(prompt, systemPrompt = '', temperature = 0.7, retryCount = 0) {
   try {
+    // 修改请求格式
     const requestBody = {
       model: 'o1-mini',
       messages: [
-        {
-          role: 'system',
-          content: systemPrompt || '你是一个专业的AI助手。'
-        },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature,
+      max_tokens: 1000,
+      presence_penalty: 0,
+      frequency_penalty: 0
     };
 
     const response = await aiClient.post('/v1/chat/completions', requestBody);
     return response.data?.choices?.[0]?.message?.content || '';
   } catch (error) {
     console.error('AI 调用错误:', error);
+    
+    // 打印详细的错误信息
+    if (error.response?.data) {
+      console.error('API 错误详情:', JSON.stringify(error.response.data, null, 2));
+    }
 
     // 如果是超时错误或网络错误，并且未超过重试次数，则重试
     if (retryCount < MAX_RETRIES && (error.isTimeout || !error.response)) {
-      const nextRetryDelay = RETRY_DELAY * Math.pow(2, retryCount); // 指数退避
+      const nextRetryDelay = RETRY_DELAY * Math.pow(2, retryCount);
       console.log(`请求超时，${retryCount + 1}/${MAX_RETRIES} 次重试，等待 ${nextRetryDelay/1000} 秒...`);
       await delay(nextRetryDelay);
       return callAI(prompt, systemPrompt, temperature, retryCount + 1);
+    }
+
+    // 如果是 400 错误，可能是 API 格式问题
+    if (error.response?.status === 400) {
+      const errorMessage = error.response.data?.error?.message || '未知的 API 格式错误';
+      console.error('API 格式错误:', errorMessage);
+      throw new Error(`API 格式错误: ${errorMessage}`);
     }
 
     // 如果重试次数已达上限，返回友好的错误信息
@@ -81,18 +92,19 @@ export async function callAI(prompt, systemPrompt = '', temperature = 0.7, retry
  */
 export function getErrorMessage(error) {
   if (error.response?.data?.error) {
-    return typeof error.response.data.error === 'object'
-      ? JSON.stringify(error.response.data.error)
-      : error.response.data.error;
+    const errorData = error.response.data.error;
+    return typeof errorData === 'object' 
+      ? `错误: ${errorData.message || JSON.stringify(errorData)}`
+      : errorData;
   }
   
   if (error.response) {
     switch (error.response.status) {
-      case 401: return 'API 密钥无效';
-      case 429: return '请求过于频繁';
-      case 503: return '服务暂时不可用';
-      case 500: return '服务器内部错误';
-      default: return '请求失败';
+      case 401: return 'API 密钥无效，请检查密钥配置';
+      case 429: return '请求过于频繁，请稍后再试';
+      case 503: return '服务暂时不可用，请稍后再试';
+      case 500: return '服务器内部错误，请联系技术支持';
+      default: return `请求失败 (${error.response.status})`;
     }
   }
   
