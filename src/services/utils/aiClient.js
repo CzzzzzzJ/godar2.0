@@ -1,28 +1,107 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://api.fast-tunnel.one';
-const API_KEY = 'sk-YT7uKeBySL3G9rjG5bDbC08131Dd476aA7151c5cF0810d35';
-const MAX_RETRIES = 3;
-const RETRY_DELAY = 2000; // 增加到2秒
-const TIMEOUT = 30000; // 增加到30秒
+// 从环境变量中获取配置
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const API_KEY = process.env.REACT_APP_API_KEY;
+const MAX_RETRIES = parseInt(process.env.REACT_APP_MAX_RETRIES || '3');
+const RETRY_DELAY = parseInt(process.env.REACT_APP_RETRY_DELAY || '2000');
+const TIMEOUT = parseInt(process.env.REACT_APP_TIMEOUT || '30000');
 
-// 创建 API 客户端
+// 安全检查和日志脱敏工具
+const securityUtils = {
+  // 检查 API Key 格式
+  validateApiKey: (key) => {
+    return /^sk-[A-Za-z0-9]{32,}$/.test(key);
+  },
+  
+  // 检查 URL 格式
+  validateUrl: (url) => {
+    try {
+      new URL(url);
+      return url.startsWith('https://');
+    } catch {
+      return false;
+    }
+  },
+  
+  // 脱敏 API Key
+  maskApiKey: (key) => {
+    if (!key) return '';
+    return `${key.slice(0, 5)}...${key.slice(-4)}`;
+  },
+  
+  // 脱敏请求日志
+  maskSensitiveData: (data) => {
+    if (!data) return data;
+    const masked = JSON.parse(JSON.stringify(data));
+    if (masked.headers?.Authorization) {
+      masked.headers.Authorization = 'Bearer sk-***';
+    }
+    return masked;
+  }
+};
+
+// 增强的环境变量验证
+if (!API_BASE_URL || !API_KEY) {
+  console.error('错误: 缺少必要的环境变量配置');
+  throw new Error('请检查环境变量配置是否完整 (API_BASE_URL, API_KEY)');
+}
+
+if (!securityUtils.validateUrl(API_BASE_URL)) {
+  console.error('API URL 验证失败:', API_BASE_URL);
+  throw new Error('API_BASE_URL 格式无效: 必须是有效的 HTTPS URL');
+}
+
+if (!securityUtils.validateApiKey(API_KEY)) {
+  console.error('API Key 验证失败:', securityUtils.maskApiKey(API_KEY));
+  throw new Error('API_KEY 格式无效: 必须以 sk- 开头，并包含足够的字符');
+}
+
+// 创建 API 客户端，添加安全配置
 const aiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Authorization': `Bearer ${API_KEY}`,
     'Content-Type': 'application/json',
+    'X-Security-Headers': '1',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains'
   },
   timeout: TIMEOUT,
+  withCredentials: false, // 禁用凭证
+  maxContentLength: 50 * 1024 * 1024, // 限制响应大小为 50MB
+  maxBodyLength: 50 * 1024 * 1024, // 限制请求体大小为 50MB
 });
 
-// 添加响应拦截器
+// 增强的请求拦截器
+aiClient.interceptors.request.use(
+  config => {
+    // 记录脱敏的请求日志
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API 请求配置:', securityUtils.maskSensitiveData(config));
+    }
+    return config;
+  },
+  error => {
+    console.error('请求拦截器错误:', error.message);
+    return Promise.reject(error);
+  }
+);
+
+// 增强的响应拦截器
 aiClient.interceptors.response.use(
-  response => response,
+  response => {
+    // 检查响应中的敏感信息
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API 响应:', securityUtils.maskSensitiveData(response.data));
+    }
+    return response;
+  },
   error => {
     if (error.code === 'ECONNABORTED') {
       error.isTimeout = true;
     }
+    // 脱敏错误日志
+    console.error('API 错误:', securityUtils.maskSensitiveData(error));
     return Promise.reject(error);
   }
 );
@@ -37,6 +116,15 @@ aiClient.interceptors.response.use(
  */
 export async function callAI(prompt, systemPrompt = '', temperature = 0.7, retryCount = 0) {
   try {
+    // 输入验证
+    if (!prompt || typeof prompt !== 'string') {
+      throw new Error('无效的提示词');
+    }
+
+    if (prompt.length > 4000) {
+      throw new Error('提示词超出长度限制');
+    }
+
     // 修改请求格式
     const requestBody = {
       model: 'o1-mini',
@@ -52,7 +140,13 @@ export async function callAI(prompt, systemPrompt = '', temperature = 0.7, retry
     };
 
     const response = await aiClient.post('/v1/chat/completions', requestBody);
-    return response.data?.choices?.[0]?.message?.content || '';
+    
+    // 验证响应格式
+    if (!response.data?.choices?.[0]?.message?.content) {
+      throw new Error('无效的 API 响应格式');
+    }
+
+    return response.data.choices[0].message.content;
   } catch (error) {
     console.error('AI 调用错误:', error);
     
