@@ -5,19 +5,19 @@
     "language": "中文/EN"
   },
   "home": {
-    "welcome": "我是 Co-X，很高兴见到你！",
-    "subtitle": "有什么想了解的问题呢，来跟的们聊聊~",
-    "searchPlaceholder": "输入Co-X想提供帮助"
+    "welcome": "您好，我是 Co-X，很高兴为您服务！",
+    "subtitle": "有什么想了解的问题，让我们一起探讨吧",
+    "searchPlaceholder": "请输入您想了解的问题"
   },
   "experts": {
-    "title": "注册跨境专家",
+    "title": "跨境专家团队",
     "specialty": {
       "gynecology": "妇科医生",
       "dentistry": "牙医"
     }
   },
   "comments": {
-    "title": "用户评论",
-    "viewMore": "查看更多评论"
+    "title": "用户评价",
+    "viewMore": "查看更多"
   }
 } 
