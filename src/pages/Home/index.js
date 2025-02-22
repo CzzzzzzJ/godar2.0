@@ -16,6 +16,7 @@ import ExpertsList from '../../components/ExpertsList';
 import CommentsList from '../../components/CommentsList';
 import ChatBox from '../../components/ChatBox';
 import { askQuestion } from '../../services/ai';
+import ArticleList from '../../components/ArticleList';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   background: 'transparent',
@@ -250,6 +251,7 @@ function Home() {
         </SearchContainer>
 
         <ExpertsList />
+        <ArticleList />
         <CommentsList />
       </Container>
     </Box>
