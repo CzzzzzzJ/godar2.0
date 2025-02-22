@@ -38,18 +38,29 @@ const LoginContent = styled(Container)(({ theme }) => ({
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
   marginBottom: theme.spacing(4),
+  width: '100%',
   '& .MuiTabs-indicator': {
     height: '2px',
   },
   '& .MuiTab-root': {
-    fontSize: '16px',
+    fontSize: '14px',
     fontWeight: 500,
+    minWidth: '120px',
+    padding: '12px 16px',
     color: '#666666',
     '&.Mui-selected': {
       color: theme.palette.primary.main,
     },
   },
+  '& .MuiTabs-flexContainer': {
+    justifyContent: 'center',
+  },
 }));
+
+const StyledTab = styled(Tab)({
+  whiteSpace: 'nowrap',
+  minHeight: '48px',
+});
 
 const LoginForm = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -127,10 +138,10 @@ function Login() {
         <StyledTabs
           value={loginType}
           onChange={handleLoginTypeChange}
-          variant="fullWidth"
+          variant="standard"
         >
-          <Tab label="账号密码登录" />
-          <Tab label="手机验证码登录" />
+          <StyledTab label="账号密码登录" />
+          <StyledTab label="手机验证码登录" />
         </StyledTabs>
 
         <LoginForm>
