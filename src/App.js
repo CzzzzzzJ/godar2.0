@@ -6,6 +6,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import theme from './theme';
 import './i18n/config';
 import Sidebar from './components/Sidebar';
+import Footer from './components/Footer';
 import Home from './pages/Home';
 
 const MainContent = Box;
@@ -22,22 +23,24 @@ function App() {
             collapsed={sidebarCollapsed} 
             onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
           />
-          <MainContent
-            component="main"
+          <Box
             sx={{
               flexGrow: 1,
-              ml: sidebarCollapsed ? '64px' : '240px',
               minHeight: '100vh',
-              bgcolor: 'background.default',
-              p: 3,
-              transition: 'margin-left 0.3s ease'
+              display: 'flex',
+              flexDirection: 'column',
+              ml: sidebarCollapsed ? '64px' : '240px',
+              transition: 'margin-left 0.3s ease',
             }}
           >
-            <Routes>
-              <Route path="/" element={<Home />} />
-              {/* 添加其他路由 */}
-            </Routes>
-          </MainContent>
+            <Box sx={{ flex: 1, p: 3 }}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                {/* 添加其他路由 */}
+              </Routes>
+            </Box>
+            <Footer />
+          </Box>
         </Box>
       </Router>
     </ThemeProvider>
