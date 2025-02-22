@@ -11,18 +11,13 @@ import {
   Toolbar,
   Button,
 } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
 import ExpertsList from '../../components/ExpertsList';
 import CommentsList from '../../components/CommentsList';
 import ChatBox from '../../components/ChatBox';
 import { askQuestion } from '../../services/ai';
 import ArticleList from '../../components/ArticleList';
-
-const StyledAppBar = styled(AppBar)(({ theme }) => ({
-  background: 'transparent',
-  boxShadow: 'none',
-  borderBottom: `1px solid ${theme.palette.divider}`,
-}));
 
 const Logo = styled('img')({
   height: '40px',
@@ -90,6 +85,7 @@ const SearchFieldContainer = styled(Box)({
 
 function Home() {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [question, setQuestion] = useState('');
@@ -177,18 +173,6 @@ function Home() {
 
   return (
     <Box>
-      <StyledAppBar position="static">
-        <Toolbar>
-          <Logo src="/logo.jpg" alt="Godar" />
-          <Box sx={{ flexGrow: 1 }} />
-          <Button onClick={toggleLanguage}>{t('nav.language')}</Button>
-          <Button color="primary">{t('nav.login')}</Button>
-          <Button color="primary" variant="contained">
-            {t('nav.register')}
-          </Button>
-        </Toolbar>
-      </StyledAppBar>
-
       <Container maxWidth="lg">
         <SearchContainer>
           <MiniLogo 

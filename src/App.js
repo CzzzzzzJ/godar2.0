@@ -6,10 +6,11 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import theme from './theme';
 import './i18n/config';
 import Sidebar from './components/Sidebar';
+import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
-
-const MainContent = Box;
+import Login from './pages/Login';
+import Register from './pages/Register';
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -31,10 +32,14 @@ function App() {
               flexDirection: 'column',
               ml: sidebarCollapsed ? '64px' : '240px',
               transition: 'margin-left 0.3s ease',
+              backgroundColor: theme.palette.background.default,
             }}
           >
-            <Box sx={{ flex: 1, p: 3 }}>
+            <Navbar />
+            <Box sx={{ flex: 1 }}>
               <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
                 <Route path="/" element={<Home />} />
                 {/* 添加其他路由 */}
               </Routes>
