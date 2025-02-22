@@ -1,6 +1,7 @@
 import React from 'react';
 import { styled } from '@mui/material/styles';
 import { Box, Typography, Grid, Button } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 import ExpertCard from '../ExpertCard';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
@@ -103,6 +104,8 @@ const mockExperts = [
 ];
 
 function ExpertsList() {
+  const navigate = useNavigate();
+
   return (
     <Box sx={{ mb: 4 }}>
       <SectionTitle>
@@ -112,6 +115,7 @@ function ExpertsList() {
         <ViewMoreButton 
           endIcon={<ArrowForwardIcon />}
           disableRipple
+          onClick={() => navigate('/experts')}
         >
           查看更多
         </ViewMoreButton>
