@@ -1,96 +1,129 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import { styled } from '@mui/material/styles';
-import { Box, Typography, Avatar, Grid } from '@mui/material';
-import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import { Box, Typography, Grid, Button } from '@mui/material';
+import ExpertCard from '../ExpertCard';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
-const ExpertCard = styled(Box)(({ theme }) => ({
+const SectionTitle = styled(Box)(({ theme }) => ({
   display: 'flex',
-  flexDirection: 'column',
+  justifyContent: 'space-between',
   alignItems: 'center',
-  padding: theme.spacing(2),
-  position: 'relative',
-}));
-
-const ChatIcon = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: theme.spacing(1),
-  right: theme.spacing(1),
-  width: '24px',
-  height: '24px',
-  background: theme.palette.background.paper,
-  borderRadius: '50%',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  '& svg': {
-    fontSize: '16px',
-    color: theme.palette.primary.main,
+  marginBottom: theme.spacing(3),
+  '& h2': {
+    fontSize: '18px',
+    fontWeight: 500,
+    color: '#333333',
   },
 }));
 
-const experts = [
+const ViewMoreButton = styled(Button)(({ theme }) => ({
+  color: '#666666',
+  fontSize: '14px',
+  padding: '4px 8px',
+  '&:hover': {
+    backgroundColor: 'transparent',
+    color: theme.palette.primary.main,
+  },
+  '& .MuiButton-endIcon': {
+    marginLeft: '4px',
+    '& svg': {
+      fontSize: '16px',
+    },
+  },
+}));
+
+const ExpertsGrid = styled(Grid)(({ theme }) => ({
+  margin: '0 -8px',
+  width: 'calc(100% + 16px)',
+  '& .MuiGrid-item': {
+    paddingTop: '8px',
+    paddingBottom: '8px',
+    paddingLeft: '8px',
+    paddingRight: '8px',
+  },
+}));
+
+// 模拟数据，后续可以通过API获取
+const mockExperts = [
   {
     id: 1,
-    name: 'Dr. Karla Gutierrez',
-    specialty: 'gynecology',
     avatar: '/avatars/expert1.jpg',
+    name: 'Dr. Jacky Tong',
+    title: '新加坡跨境电商顾问',
+    location: '深圳',
+    specialty: '跨境电商',
+    responseRate: 95,
+    todayResponses: 40,
+    experience: '10年经验',
   },
   {
     id: 2,
-    name: 'Dr. Mario Gutierrez',
-    specialty: 'dentistry',
     avatar: '/avatars/expert2.jpg',
+    name: 'Dr. Jacky Tong',
+    title: '新加坡跨境电商顾问',
+    location: '深圳',
+    specialty: '跨境电商',
+    responseRate: 93,
+    todayResponses: 40,
+    experience: '10年经验',
   },
   {
     id: 3,
-    name: 'Dr. Karla Gutierrez',
-    specialty: 'gynecology',
     avatar: '/avatars/expert3.jpg',
+    name: 'Dr. Jacky Tong',
+    title: '新加坡跨境电商顾问',
+    location: '深圳',
+    specialty: '跨境电商',
+    responseRate: 95,
+    todayResponses: 40,
+    experience: '10年经验',
   },
   {
     id: 4,
-    name: 'Dr. Karla Gutierrez',
-    specialty: 'gynecology',
     avatar: '/avatars/expert4.jpg',
+    name: 'Dr. Jacky Tong',
+    title: '新加坡跨境电商顾问',
+    location: '深圳',
+    specialty: '跨境电商',
+    responseRate: 95,
+    todayResponses: 40,
+    experience: '10年经验',
   },
   {
     id: 5,
-    name: 'Dr. Karla Gutierrez',
-    specialty: 'gynecology',
     avatar: '/avatars/expert5.jpg',
+    name: 'Dr. Jacky Tong',
+    title: '新加坡跨境电商顾问',
+    location: '深圳',
+    specialty: '跨境电商',
+    responseRate: 95,
+    todayResponses: 40,
+    experience: '10年经验',
   },
 ];
 
 function ExpertsList() {
-  const { t } = useTranslation();
-
   return (
-    <Box sx={{ mb: 6 }}>
-      <Typography variant="h5" gutterBottom>
-        {t('experts.title')}
-      </Typography>
-      <Grid container spacing={2}>
-        {experts.map((expert) => (
-          <Grid item xs={12} sm={6} md={2.4} key={expert.id}>
-            <ExpertCard>
-              <ChatIcon>
-                <ChatBubbleOutlineIcon />
-              </ChatIcon>
-              <Avatar
-                src={expert.avatar}
-                sx={{ width: 80, height: 80, mb: 1 }}
-              />
-              <Typography variant="subtitle1" gutterBottom>
-                {expert.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {t(`experts.specialty.${expert.specialty}`)}
-              </Typography>
-            </ExpertCard>
+    <Box sx={{ mb: 4 }}>
+      <SectionTitle>
+        <Typography variant="h2" component="h2">
+          注册跨境专家
+        </Typography>
+        <ViewMoreButton 
+          endIcon={<ArrowForwardIcon />}
+          disableRipple
+        >
+          查看更多
+        </ViewMoreButton>
+      </SectionTitle>
+      
+      <ExpertsGrid container>
+        {mockExperts.map((expert) => (
+          <Grid item xs={12} sm={6} md={3} lg={2.4} key={expert.id}>
+            <ExpertCard expert={expert} />
           </Grid>
         ))}
-      </Grid>
+      </ExpertsGrid>
     </Box>
   );
 }
