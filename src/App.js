@@ -12,6 +12,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ExpertsPage from './pages/Experts';
+import Messages from './pages/Messages';
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/experts" element={<ExpertsPage />} />
+                <Route path="/messages" element={<Messages />} />
                 <Route path="/" element={<Home />} />
                 {/* 添加其他路由 */}
               </Routes>
