@@ -211,7 +211,10 @@ function Navbar() {
             </Tooltip>
 
             <Tooltip title="AI助理设置">
-              <ActionButton onClick={handleAISettingsClick}>
+              <ActionButton onClick={() => {
+                navigate('/ai-settings');
+                handleAISettingsClose();
+              }}>
                 <SmartToyIcon />
               </ActionButton>
             </Tooltip>
@@ -244,7 +247,10 @@ function Navbar() {
                 <Typography variant="body2">温度: 0.7</Typography>
               </MenuItem>
               <Divider />
-              <MenuItem onClick={() => navigate('/ai-settings')}>
+              <MenuItem onClick={() => {
+                navigate('/ai-settings');
+                handleAISettingsClose();
+              }}>
                 <SettingsIcon fontSize="small" sx={{ mr: 1 }} />
                 <Typography variant="body2">高级设置</Typography>
               </MenuItem>
