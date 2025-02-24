@@ -16,6 +16,7 @@ import ExpertsPage from './pages/Experts';
 import Messages from './pages/Messages';
 import ExpertAdd from './pages/ExpertAdd';
 import AISettings from './pages/AISettings';
+import TokenSettings from './pages/TokenSettings';
 
 function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -50,6 +51,7 @@ function App() {
                   <Route path="/messages" element={<Messages />} />
                   <Route path="/expert-add" element={<ExpertAdd />} />
                   <Route path="/ai-settings" element={<AISettings />} />
+                  <Route path="/token" element={<TokenSettings />} />
                   <Route path="/" element={<Home />} />
                   {/* 添加其他路由 */}
                 </Routes>
