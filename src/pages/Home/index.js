@@ -10,6 +10,9 @@ import {
   AppBar,
   Toolbar,
   Button,
+  Select,
+  MenuItem,
+  InputBase,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
@@ -52,16 +55,81 @@ const SearchContainer = styled(Box)(({ theme }) => ({
   paddingTop: theme.spacing(6),
 }));
 
-const SearchField = styled(TextField)(({ theme }) => ({
+const RegionSelect = styled(Select)(({ theme }) => ({
+  width: '120px',
+  backgroundColor: '#FFFFFF',
+  borderRadius: `${theme.shape.borderRadius * 3}px 0 0 ${theme.shape.borderRadius * 3}px`,
+  '& .MuiSelect-select': {
+    padding: '12px 32px 12px 16px',
+    fontSize: '14px',
+    color: '#333333',
+  },
+  '& .MuiOutlinedInput-notchedOutline': {
+    borderWidth: '1px',
+    borderColor: '#E0E0E0',
+    borderRight: 'none',
+    transition: 'border-color 0.3s ease',
+  },
+  '&:hover .MuiOutlinedInput-notchedOutline': {
+    borderColor: theme.palette.primary.main,
+  },
+  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+    borderWidth: '1px',
+    borderColor: theme.palette.primary.main,
+  },
+}));
+
+const SearchFieldContainer = styled(Box)(({ theme }) => ({
   width: '100%',
+  display: 'flex',
+  justifyContent: 'center',
   maxWidth: '600px',
   margin: '0 auto',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+  borderRadius: theme.shape.borderRadius * 3,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+  },
+  '&:focus-within': {
+    boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
+  },
+}));
+
+const StyledSearchField = styled(TextField)(({ theme }) => ({
+  flex: 1,
   '& .MuiOutlinedInput-root': {
-    borderRadius: theme.shape.borderRadius * 3,
-    backgroundColor: theme.palette.background.paper,
-    transition: 'all 0.3s ease-in-out',
-    '&.Mui-focused': {
-      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+    borderRadius: `0 ${theme.shape.borderRadius * 3}px ${theme.shape.borderRadius * 3}px 0`,
+    backgroundColor: '#FFFFFF',
+    '& fieldset': {
+      borderWidth: '1px',
+      borderColor: '#E0E0E0',
+      borderLeft: 'none',
+      transition: 'border-color 0.3s ease',
+    },
+    '&:hover fieldset': {
+      borderColor: theme.palette.primary.main,
+    },
+    '&.Mui-focused fieldset': {
+      borderWidth: '1px',
+      borderColor: theme.palette.primary.main,
+    },
+  },
+  '& .MuiInputBase-input': {
+    color: '#333333',
+    '&::placeholder': {
+      color: '#999999',
+      opacity: 1,
+    },
+  },
+  '& .MuiIconButton-root': {
+    color: theme.palette.primary.main,
+    transition: 'all 0.3s ease',
+    '&:hover': {
+      backgroundColor: 'rgba(75, 100, 85, 0.08)',
+    },
+    '&.Mui-disabled': {
+      color: '#CCCCCC',
     },
   },
 }));
@@ -75,13 +143,20 @@ const ContentContainer = styled(Box)(({ theme, hasMessages }) => ({
   marginTop: hasMessages ? theme.spacing(2) : theme.spacing(4),
 }));
 
-const SearchFieldContainer = styled(Box)({
-  width: '100%',
-  display: 'flex',
-  justifyContent: 'center',
-  maxWidth: '600px',
-  margin: '0 auto',
-});
+// 区域选项数据
+const regions = [
+  { value: 'all', label: '全球' },
+  { value: 'china', label: '中国' },
+  { value: 'us', label: '美国' },
+  { value: 'europe', label: '欧洲' },
+  { value: 'japan', label: '日本' },
+  { value: 'australia', label: '澳大利亚' },
+  { value: 'singapore', label: '新加坡' },
+  { value: 'korea', label: '韩国' },
+  { value: 'southeast-asia', label: '东南亚' },
+  { value: 'africa', label: '非洲' },
+  { value: 'others', label: '其他' },
+];
 
 function Home() {
   const { t, i18n } = useTranslation();
@@ -91,6 +166,7 @@ function Home() {
   const [question, setQuestion] = useState('');
   const [retrying, setRetrying] = useState(false);
   const [thinkingStep, setThinkingStep] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('all');
 
   const hasMessages = messages.length > 0 || loading;
 
@@ -122,7 +198,10 @@ function Home() {
     e.preventDefault();
     if (!question.trim() || loading) return;
 
-    const userMessage = { isUser: true, content: question.trim() };
+    const userMessage = { 
+      isUser: true, 
+      content: `${regions.find(r => r.value === selectedRegion).label}及${question.trim()}`
+    };
     setMessages(prev => [...prev, userMessage]);
     setLoading(true);
     setRetrying(false);
@@ -209,7 +288,18 @@ function Home() {
           </Typography>
           <ContentContainer hasMessages={hasMessages}>
             <SearchFieldContainer component="form" onSubmit={handleSearch}>
-              <SearchField
+              <RegionSelect
+                value={selectedRegion}
+                onChange={(e) => setSelectedRegion(e.target.value)}
+                variant="outlined"
+              >
+                {regions.map((region) => (
+                  <MenuItem key={region.value} value={region.value}>
+                    {region.label}
+                  </MenuItem>
+                ))}
+              </RegionSelect>
+              <StyledSearchField
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder={t('home.searchPlaceholder')}
