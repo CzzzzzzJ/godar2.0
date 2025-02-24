@@ -3,6 +3,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { Box } from '@mui/material';
 import CssBaseline from '@mui/material/CssBaseline';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import theme from './theme';
 import './i18n/config';
 import Sidebar from './components/Sidebar';
@@ -21,39 +22,41 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Router>
-        <Box sx={{ display: 'flex' }}>
-          <Sidebar 
-            collapsed={sidebarCollapsed} 
-            onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
-          />
-          <Box
-            sx={{
-              flexGrow: 1,
-              minHeight: '100vh',
-              display: 'flex',
-              flexDirection: 'column',
-              ml: sidebarCollapsed ? '64px' : '240px',
-              transition: 'margin-left 0.3s ease',
-              backgroundColor: theme.palette.background.default,
-            }}
-          >
-            <Navbar />
-            <Box sx={{ flex: 1 }}>
-              <Routes>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/experts" element={<ExpertsPage />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/expert-add" element={<ExpertAdd />} />
-                <Route path="/" element={<Home />} />
-                {/* 添加其他路由 */}
-              </Routes>
+      <AuthProvider>
+        <Router>
+          <Box sx={{ display: 'flex' }}>
+            <Sidebar 
+              collapsed={sidebarCollapsed} 
+              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+            />
+            <Box
+              sx={{
+                flexGrow: 1,
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                ml: sidebarCollapsed ? '64px' : '240px',
+                transition: 'margin-left 0.3s ease',
+                backgroundColor: theme.palette.background.default,
+              }}
+            >
+              <Navbar />
+              <Box sx={{ flex: 1 }}>
+                <Routes>
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/experts" element={<ExpertsPage />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/expert-add" element={<ExpertAdd />} />
+                  <Route path="/" element={<Home />} />
+                  {/* 添加其他路由 */}
+                </Routes>
+              </Box>
+              <Footer />
             </Box>
-            <Footer />
           </Box>
-        </Box>
-      </Router>
+        </Router>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

@@ -78,6 +78,10 @@ const menuItems = [
   { text: '退出', icon: <LogoutIcon />, path: '/logout' },
 ];
 
+const StyledBox = styled(Box)(({ theme, isCollapsed }) => ({
+  // ... existing styles ...
+}));
+
 function Sidebar({ collapsed, onToggle }) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -87,35 +91,37 @@ function Sidebar({ collapsed, onToggle }) {
   };
 
   return (
-    <SidebarContainer collapsed={collapsed}>
-      <TopSection>
-        <ToggleButton onClick={onToggle}>
-          <MenuIcon 
-            sx={{ 
-              transform: collapsed ? 'rotate(180deg)' : 'none',
-              transition: 'transform 0.3s ease'
-            }} 
-          />
-        </ToggleButton>
-      </TopSection>
-      <List sx={{ mt: 1 }}>
-        {menuItems.map((item) => (
-          <Tooltip 
-            title={collapsed ? item.text : ''} 
-            placement="right" 
-            key={item.text}
-          >
-            <StyledListItem
-              active={location.pathname === item.path ? 1 : 0}
-              onClick={() => handleNavigation(item.path)}
+    <StyledBox isCollapsed={collapsed ? 1 : 0}>
+      <SidebarContainer collapsed={collapsed}>
+        <TopSection>
+          <ToggleButton onClick={onToggle}>
+            <MenuIcon 
+              sx={{ 
+                transform: collapsed ? 'rotate(180deg)' : 'none',
+                transition: 'transform 0.3s ease'
+              }} 
+            />
+          </ToggleButton>
+        </TopSection>
+        <List sx={{ mt: 1 }}>
+          {menuItems.map((item) => (
+            <Tooltip 
+              title={collapsed ? item.text : ''} 
+              placement="right" 
+              key={item.text}
             >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              {!collapsed && <ListItemText primary={item.text} />}
-            </StyledListItem>
-          </Tooltip>
-        ))}
-      </List>
-    </SidebarContainer>
+              <StyledListItem
+                active={location.pathname === item.path ? 1 : 0}
+                onClick={() => handleNavigation(item.path)}
+              >
+                <ListItemIcon>{item.icon}</ListItemIcon>
+                {!collapsed && <ListItemText primary={item.text} />}
+              </StyledListItem>
+            </Tooltip>
+          ))}
+        </List>
+      </SidebarContainer>
+    </StyledBox>
   );
 }
 
