@@ -4,11 +4,12 @@ import {
   Box,
   Typography,
   Avatar,
-  Button,
   TextField,
   InputAdornment,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import AddExpertButton from '../../components/AddExpertButton';
+import { useNavigate } from 'react-router-dom';
 
 const PageContainer = styled(Box)(({ theme }) => ({
   height: 'calc(100vh - 64px)',
@@ -39,18 +40,6 @@ const SearchField = styled(TextField)(({ theme }) => ({
     '&.Mui-focused fieldset': {
       borderColor: theme.palette.primary.main,
     },
-  },
-}));
-
-const AddExpertButton = styled(Button)(({ theme }) => ({
-  height: '40px',
-  padding: '0 16px',
-  backgroundColor: '#FFFFFF',
-  border: '1px dashed #CCCCCC',
-  color: '#666666',
-  '&:hover': {
-    backgroundColor: '#F5F7F5',
-    border: '1px dashed #999999',
   },
 }));
 
@@ -152,6 +141,11 @@ const mockMessages = [
 function Messages() {
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const navigate = useNavigate();
+
+  const handleAddExpert = () => {
+    navigate('/expert-add');
+  };
 
   return (
     <PageContainer>
@@ -168,9 +162,7 @@ function Messages() {
             ),
           }}
         />
-        <AddExpertButton>
-          + 添加咨询专家
-        </AddExpertButton>
+        <AddExpertButton />
       </TopSection>
 
       <MessageList>
