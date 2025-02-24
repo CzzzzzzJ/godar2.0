@@ -10,6 +10,7 @@ const mockUser = {
   email: 'zhang@example.com',
   notifications: 3,
   messages: 5,
+  tokens: 1000, // 添加 tokens 字段
 };
 
 export function AuthProvider({ children }) {
