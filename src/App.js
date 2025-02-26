@@ -22,6 +22,7 @@ import Favorites from './pages/Favorites';
 import { registerService, checkServiceStatus } from './config/nacos';
 
 function App() {
+  const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [registrationStatus, setRegistrationStatus] = React.useState('');
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
 
@@ -60,11 +61,25 @@ function App() {
       <CssBaseline />
       <AuthProvider>
         <Router>
-          <Box sx={{ display: 'flex', minHeight: '100vh' }}>
-            <Sidebar />
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ display: 'flex' }}>
+            <Sidebar 
+              collapsed={sidebarCollapsed} 
+              onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+            />
+            <Box
+              component="main"
+              sx={{
+                flexGrow: 1,
+                minHeight: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                ml: sidebarCollapsed ? '64px' : '240px',
+                transition: 'margin-left 0.3s ease',
+                backgroundColor: theme.palette.background.default,
+              }}
+            >
               <Navbar />
-              <Box component="main" sx={{ flex: 1, p: 3, position: 'relative' }}>
+              <Box sx={{ flex: 1, p: 3 }}>
                 <Routes>
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />

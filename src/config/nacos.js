@@ -90,6 +90,7 @@ const startHeartbeat = () => {
       if (!response.ok) {
         throw new Error('Failed to send heartbeat');
       }
+      console.log('Heartbeat sent successfully');
     } catch (error) {
       console.error('Error sending heartbeat:', error);
     }

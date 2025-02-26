@@ -1,5 +1,5 @@
 import React from 'react';
-import { styled } from '@mui/material/styles';
+import { styled, alpha } from '@mui/material/styles';
 import { 
   Box,
   List,
@@ -18,68 +18,74 @@ import HistoryIcon from '@mui/icons-material/History';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { menuItems } from './menuItems';
 
-const SidebarContainer = styled(Box)(({ theme, collapsed }) => ({
-  width: collapsed ? '64px' : '240px',
-  height: '100vh',
-  backgroundColor: theme.palette.primary.main,
-  color: theme.palette.primary.contrastText,
+const StyledBox = styled(Box)(({ theme, isCollapsed }) => ({
   position: 'fixed',
   left: 0,
   top: 0,
+  bottom: 0,
+  width: isCollapsed ? 64 : 240,
+  backgroundColor: theme.palette.primary.main,
+  transition: 'width 0.3s ease',
+  zIndex: theme.zIndex.drawer,
   display: 'flex',
   flexDirection: 'column',
-  transition: 'width 0.3s ease',
-  overflow: 'hidden',
-  zIndex: theme.zIndex.drawer,
 }));
 
-const TopSection = styled(Box)(({ theme }) => ({
+const SidebarContainer = styled(Box)(({ theme, collapsed }) => ({
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  padding: theme.spacing(2, 1),
+  width: collapsed ? 64 : 240,
+  transition: 'width 0.3s ease',
+}));
+
+const TopSection = styled(Box)({
   display: 'flex',
   alignItems: 'center',
-  padding: theme.spacing(2),
-  borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-}));
+  justifyContent: 'flex-end',
+  marginBottom: '16px',
+  padding: '0 8px',
+});
 
 const ToggleButton = styled(IconButton)(({ theme }) => ({
-  color: theme.palette.primary.contrastText,
-  padding: theme.spacing(1),
+  padding: '8px',
+  color: '#fff',
+  backgroundColor: alpha(theme.palette.common.white, 0.1),
   '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: alpha(theme.palette.common.white, 0.2),
   },
 }));
 
 const StyledListItem = styled(ListItem)(({ theme, active }) => ({
-  padding: theme.spacing(1.5, 2),
+  borderRadius: theme.shape.borderRadius,
+  marginBottom: '4px',
+  padding: theme.spacing(1),
   cursor: 'pointer',
-  backgroundColor: active ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+  color: '#fff',
   '&:hover': {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: alpha(theme.palette.common.white, 0.1),
   },
-  '& .MuiListItemIcon-root': {
-    minWidth: '40px',
-    color: theme.palette.primary.contrastText,
-  },
-  '& .MuiListItemText-root': {
-    '& .MuiTypography-root': {
-      fontSize: '0.95rem',
-      fontWeight: active ? 500 : 400,
+  ...(active && {
+    backgroundColor: alpha(theme.palette.common.white, 0.15),
+    '& .MuiListItemIcon-root': {
+      color: '#fff',
     },
+    '& .MuiListItemText-primary': {
+      color: '#fff',
+      fontWeight: 500,
+    },
+  }),
+  '& .MuiListItemIcon-root': {
+    color: alpha(theme.palette.common.white, 0.7),
+    minWidth: '40px',
   },
-}));
-
-const menuItems = [
-  { text: '主页', icon: <HomeIcon />, path: '/' },
-  { text: '消息', icon: <MessageIcon />, path: '/messages' },
-  { text: 'Token 设置', icon: <KeyIcon />, path: '/token' },
-  { text: '帮助', icon: <HelpIcon />, path: '/help' },
-  { text: '收藏', icon: <StarIcon />, path: '/favorites' },
-  { text: '历史记录', icon: <HistoryIcon />, path: '/history' },
-  { text: '退出', icon: <LogoutIcon />, path: '/logout' },
-];
-
-const StyledBox = styled(Box)(({ theme, isCollapsed }) => ({
-  // ... existing styles ...
+  '& .MuiListItemText-primary': {
+    color: '#fff',
+    fontSize: '0.95rem',
+  },
 }));
 
 function Sidebar({ collapsed, onToggle }) {
@@ -94,11 +100,12 @@ function Sidebar({ collapsed, onToggle }) {
     <StyledBox isCollapsed={collapsed ? 1 : 0}>
       <SidebarContainer collapsed={collapsed}>
         <TopSection>
-          <ToggleButton onClick={onToggle}>
+          <ToggleButton onClick={onToggle} size="small">
             <MenuIcon 
               sx={{ 
                 transform: collapsed ? 'rotate(180deg)' : 'none',
-                transition: 'transform 0.3s ease'
+                transition: 'transform 0.3s ease',
+                fontSize: '1.2rem'
               }} 
             />
           </ToggleButton>
@@ -106,9 +113,9 @@ function Sidebar({ collapsed, onToggle }) {
         <List sx={{ mt: 1 }}>
           {menuItems.map((item) => (
             <Tooltip 
-              title={collapsed ? item.text : ''} 
-              placement="right" 
               key={item.text}
+              title={collapsed ? item.text : ''} 
+              placement="right"
             >
               <StyledListItem
                 active={location.pathname === item.path ? 1 : 0}
