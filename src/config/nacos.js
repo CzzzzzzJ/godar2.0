@@ -1,5 +1,5 @@
 const nacosConfig = {
-  serverAddr: 'http://121.41.84.201:8929/nacos',  // 恢复完整的服务器地址
+  serverAddr: 'http://121.41.84.201:7848/nacos',  
   namespace: 'public',  // 命名空间
   group: 'DEFAULT_GROUP',  // 分组
   username: 'nacos',  // 用户名，如果需要的话
