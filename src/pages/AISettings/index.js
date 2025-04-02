@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { styled } from '@mui/material/styles';
 import {
   Box,
@@ -9,11 +9,18 @@ import {
   Avatar,
   InputAdornment,
   IconButton,
+  Snackbar,
+  Alert,
+  CircularProgress
 } from '@mui/material';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import SearchIcon from '@mui/icons-material/Search';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { useNavigate } from 'react-router-dom';
+import { AssistantService } from '../../services';
+import { useApiExecution } from '../../hooks/useApi';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PageContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4, 0),
@@ -225,12 +232,52 @@ const PageButton = styled(Button)(({ theme, active }) => ({
 }));
 
 function AISettings() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const userId = user?.id || 'user123';
+
+  // 表单状态
   const [settings, setSettings] = useState({
-    specialties: '',
-    questionStyle: '',
-    specialQuestion: '',
-    fixedAnswer: '',
+    Name: '',
+    Greeting: '',
+    PersonalityTraits: '',
     searchQuery: '',
+  });
+
+  // 表单错误状态
+  const [errors, setErrors] = useState({});
+
+  // 使用API执行钩子创建助手
+  const [createAssistant, createResult, isCreating, createError] = useApiExecution(
+    AssistantService.createAssistant,
+    {
+      onSuccess: (result) => {
+        setSnackbar({
+          open: true,
+          message: 'AI助手创建成功！',
+          severity: 'success'
+        });
+        
+        // 延迟后跳转到个人页面
+        setTimeout(() => {
+          navigate('/profile');
+        }, 1500);
+      },
+      onError: (error) => {
+        setSnackbar({
+          open: true,
+          message: `创建失败: ${error.message}`,
+          severity: 'error'
+        });
+      }
+    }
+  );
+
+  // 弹窗状态
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
   });
 
   // 模拟知识库数据
@@ -265,11 +312,72 @@ function AISettings() {
     },
   ];
 
+  // 处理表单字段变更
   const handleChange = (field) => (event) => {
     setSettings({
       ...settings,
       [field]: event.target.value,
     });
+
+    // 清除相关字段的错误
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: null
+      }));
+    }
+  };
+
+  // 表单验证
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!settings.Name.trim()) {
+      newErrors.Name = '助手名称不能为空';
+    }
+    
+    if (!settings.Greeting.trim()) {
+      newErrors.Greeting = '问候语不能为空';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // 处理表单提交
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      setSnackbar({
+        open: true,
+        message: '请完善表单信息',
+        severity: 'warning'
+      });
+      return;
+    }
+    
+    // 构建请求数据
+    const assistantData = {
+      UserId: userId,
+      Name: settings.Name,
+      Greeting: settings.Greeting,
+      PersonalityTraits: settings.PersonalityTraits,
+    };
+    
+    // 调用API创建助手
+    await createAssistant(assistantData);
+  };
+
+  // 处理取消操作
+  const handleCancel = () => {
+    navigate('/profile');
+  };
+
+  // 关闭提示弹窗
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({
+      ...prev,
+      open: false
+    }));
   };
 
   return (
@@ -290,18 +398,30 @@ function AISettings() {
               </CameraIconWrapper>
             </AvatarWrapper>
             <UserInfo>
-              <Typography className="name">张志远</Typography>
-              <Typography className="title">新加坡跨境电商顾问</Typography>
-              <Typography className="experience">10年经验</Typography>
+              <Typography className="name">{user?.name || '用户名'}</Typography>
+              <Typography className="title">AI助手创建者</Typography>
             </UserInfo>
           </ProfileSection>
           <StyledTextField
             fullWidth
-            placeholder="如：专业、发表、微软等"
-            value={settings.specialties}
-            onChange={handleChange('specialties')}
+            placeholder="如：专业、幽默、严谨等"
+            value={settings.PersonalityTraits}
+            onChange={handleChange('PersonalityTraits')}
             variant="outlined"
             label="性格特征"
+            error={!!errors.PersonalityTraits}
+            helperText={errors.PersonalityTraits || "多个特点用逗号分隔，如\"专业,高效,细致\""}
+          />
+          <StyledTextField
+            fullWidth
+            placeholder="请输入助手名称"
+            value={settings.Name}
+            onChange={handleChange('Name')}
+            variant="outlined"
+            label="助手名称"
+            required
+            error={!!errors.Name}
+            helperText={errors.Name}
           />
         </Section>
 
@@ -311,11 +431,14 @@ function AISettings() {
             fullWidth
             multiline
             rows={4}
-            placeholder="请输入用户声明的问候语"
-            value={settings.questionStyle}
-            onChange={handleChange('questionStyle')}
+            placeholder="请输入AI助手的问候语"
+            value={settings.Greeting}
+            onChange={handleChange('Greeting')}
             variant="outlined"
             label="问候语"
+            required
+            error={!!errors.Greeting}
+            helperText={errors.Greeting}
           />
           
           <Box sx={{ mt: 3 }}>
@@ -419,14 +542,40 @@ function AISettings() {
         </Section>
 
         <ButtonGroup>
-          <Button variant="outlined" color="primary">
+          <Button 
+            variant="outlined" 
+            color="primary"
+            onClick={handleCancel}
+            disabled={isCreating}
+          >
             取消
           </Button>
-          <Button variant="contained" color="primary">
-            保存设置
+          <Button 
+            variant="contained" 
+            color="primary"
+            onClick={handleSubmit}
+            disabled={isCreating}
+            startIcon={isCreating ? <CircularProgress size={20} color="inherit" /> : null}
+          >
+            {isCreating ? '创建中...' : '保存设置'}
           </Button>
         </ButtonGroup>
       </Container>
+
+      {/* 提示信息 */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </PageContainer>
   );
 }

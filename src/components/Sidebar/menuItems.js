@@ -5,17 +5,54 @@ import HelpIcon from '@mui/icons-material/Help';
 import StarIcon from '@mui/icons-material/Star';
 import HistoryIcon from '@mui/icons-material/History';
 import LogoutIcon from '@mui/icons-material/Logout';
-import SettingsIcon from '@mui/icons-material/Settings';
+import PersonIcon from '@mui/icons-material/Person';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import GroupIcon from '@mui/icons-material/Group';
 
 export const menuItems = [
-  { text: '主页', icon: <HomeIcon />, path: '/' },
-  { text: '专家', icon: <GroupIcon />, path: '/experts' },
-  { text: '消息', icon: <MessageIcon />, path: '/messages' },
-  { text: 'AI设置', icon: <SettingsIcon />, path: '/ai-settings' },
-  { text: 'Token 设置', icon: <KeyIcon />, path: '/token' },
-  { text: '收藏', icon: <StarIcon />, path: '/favorites' },
-  { text: '历史记录', icon: <HistoryIcon />, path: '/history' },
-  { text: '帮助', icon: <HelpIcon />, path: '/help' },
-  { text: '退出', icon: <LogoutIcon />, path: '/logout' },
+  {
+    title: '首页',
+    icon: <HomeIcon />,
+    path: '/',
+  },
+  {
+    title: '专家列表',
+    icon: <GroupIcon />,
+    path: '/experts',
+  },
+  {
+    title: '对话消息',
+    icon: <MessageIcon />,
+    path: '/messages',
+  },
+  {
+    title: '我的收藏',
+    icon: <StarIcon />,
+    path: '/favorites',
+  },
+  {
+    title: '使用记录',
+    icon: <HistoryIcon />,
+    path: '/history',
+  },
+  {
+    title: '个人中心',
+    icon: <PersonIcon />,
+    path: '/profile',
+  },
+  {
+    title: 'AI助手设置',
+    icon: <SmartToyIcon />,
+    path: '/ai-settings',
+  },
+  {
+    title: 'Token设置',
+    icon: <KeyIcon />,
+    path: '/token',
+  },
+  {
+    title: '问题帮助',
+    icon: <HelpIcon />,
+    path: '/help',
+  },
 ]; 

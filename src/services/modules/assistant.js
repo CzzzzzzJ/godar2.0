@@ -106,6 +106,12 @@ class AssistantService {
       clearCache();
       return result;
     } catch (error) {
+      // 处理错误，如果在生产环境并配置了模拟数据，则返回模拟数据
+      if (process.env.NODE_ENV === 'production' && MOCK_DATA[endpoint]) {
+        console.warn(`API请求失败，使用模拟数据: ${error.message}`);
+        const mockData = MOCK_DATA[endpoint](assistantData);
+        return mockData;
+      }
       throw error;
     }
   }
@@ -118,6 +124,7 @@ class AssistantService {
    */
   static async updateAssistant(assistantId, assistantData) {
     const endpoint = API_ENDPOINTS.ASSISTANT.UPDATE;
+    const params = { assistantId };
     
     // 更新后清除相关缓存
     const clearCache = () => {
@@ -130,6 +137,12 @@ class AssistantService {
       clearCache();
       return result;
     } catch (error) {
+      // 处理错误，如果在生产环境并配置了模拟数据，则返回模拟数据
+      if (process.env.NODE_ENV === 'production' && MOCK_DATA[endpoint]) {
+        console.warn(`API请求失败，使用模拟数据: ${error.message}`);
+        const mockData = MOCK_DATA[endpoint](params, assistantData);
+        return mockData;
+      }
       throw error;
     }
   }

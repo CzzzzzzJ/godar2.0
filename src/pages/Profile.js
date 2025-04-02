@@ -21,10 +21,13 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import InfoIcon from '@mui/icons-material/Info';
+import AddIcon from '@mui/icons-material/Add';
 import { useAuth } from '../contexts/AuthContext';
 import { AssistantService } from '../services';
 import useApi from '../hooks/useApi';
 import AssistantDetail from '../components/AssistantDetail';
+import AssistantForm from '../components/AssistantForm';
+import { useNavigate } from 'react-router-dom';
 
 const ProfileInfoItem = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -48,9 +51,12 @@ const AssistantCard = styled(Card)(({ theme }) => ({
 const Profile = () => {
   const { user } = useAuth();
   const userId = user?.id || 'user123';
+  const navigate = useNavigate();
   
   // 状态管理
   const [selectedAssistantId, setSelectedAssistantId] = useState(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingAssistant, setEditingAssistant] = useState(null);
   
   // 使用API Hook获取助手列表
   const { 
@@ -76,10 +82,26 @@ const Profile = () => {
     setSelectedAssistantId(null);
   };
   
+  // 打开创建助手表单
+  const handleOpenCreateForm = () => {
+    navigate('/ai-settings');
+  };
+  
   // 处理编辑助手
   const handleEditAssistant = (assistant) => {
-    console.log('编辑助手:', assistant);
-    // 这里可以实现跳转到编辑页面或打开编辑对话框
+    setEditingAssistant(assistant);
+    setIsFormOpen(true);
+  };
+  
+  // 关闭表单
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingAssistant(null);
+  };
+  
+  // 处理表单提交成功
+  const handleFormSuccess = () => {
+    refreshAssistants();
   };
 
   // 格式化日期显示
@@ -126,55 +148,66 @@ const Profile = () => {
       );
     }
     
-    if (assistants.length === 0) {
-      return (
-        <Typography align="center" color="text.secondary">
-          您还没有创建AI助手
-        </Typography>
-      );
-    }
-    
     return (
-      <List>
-        {assistants.map((assistant) => (
-          <AssistantCard key={assistant.AssistantId}>
-            <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: 'primary.main' }}>
-                  <SmartToyIcon />
-                </Avatar>
-              }
-              title={
-                <Typography variant="h6">{assistant.Name}</Typography>
-              }
-              subheader={`创建于: ${formatDate(assistant.CreatedAt)}`}
-              action={
-                <IconButton 
-                  aria-label="查看详情"
-                  onClick={() => handleViewDetail(assistant.AssistantId)}
-                >
-                  <InfoIcon />
-                </IconButton>
-              }
-            />
-            <CardContent>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {assistant.Greeting}
-              </Typography>
-              <Box>
-                {assistant.PersonalityTraits.split(',').map((trait, index) => (
-                  <Chip 
-                    key={index}
-                    label={trait.trim()}
-                    size="small"
-                    sx={{ mr: 1, mb: 1 }}
-                  />
-                ))}
-              </Box>
-            </CardContent>
-          </AssistantCard>
-        ))}
-      </List>
+      <>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<AddIcon />}
+            onClick={handleOpenCreateForm}
+          >
+            创建新助手
+          </Button>
+        </Box>
+        
+        {assistants.length === 0 ? (
+          <Typography align="center" color="text.secondary">
+            您还没有创建AI助手，点击上方按钮创建第一个助手
+          </Typography>
+        ) : (
+          <List>
+            {assistants.map((assistant) => (
+              <AssistantCard key={assistant.AssistantId}>
+                <CardHeader
+                  avatar={
+                    <Avatar sx={{ bgcolor: 'primary.main' }}>
+                      <SmartToyIcon />
+                    </Avatar>
+                  }
+                  title={
+                    <Typography variant="h6">{assistant.Name}</Typography>
+                  }
+                  subheader={`创建于: ${formatDate(assistant.CreatedAt)}`}
+                  action={
+                    <IconButton 
+                      aria-label="查看详情"
+                      onClick={() => handleViewDetail(assistant.AssistantId)}
+                    >
+                      <InfoIcon />
+                    </IconButton>
+                  }
+                />
+                <CardContent>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {assistant.Greeting}
+                  </Typography>
+                  <Box>
+                    {assistant.PersonalityTraits.split(',').map((trait, index) => (
+                      <Chip 
+                        key={index}
+                        label={trait.trim()}
+                        size="small"
+                        sx={{ mr: 1, mb: 1 }}
+                      />
+                    ))}
+                  </Box>
+                </CardContent>
+              </AssistantCard>
+            ))}
+          </List>
+        )}
+      </>
     );
   };
 
@@ -243,6 +276,15 @@ const Profile = () => {
           </Paper>
         </Grid>
       </Grid>
+      
+      {/* 创建/编辑助手表单对话框 */}
+      <AssistantForm 
+        open={isFormOpen}
+        onClose={handleCloseForm}
+        initialData={editingAssistant}
+        userId={userId}
+        onSuccess={handleFormSuccess}
+      />
     </Container>
   );
 };

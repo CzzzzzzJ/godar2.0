@@ -59,32 +59,22 @@ const ToggleButton = styled(IconButton)(({ theme }) => ({
   },
 }));
 
-const StyledListItem = styled(ListItem)(({ theme, active }) => ({
-  borderRadius: theme.shape.borderRadius,
-  marginBottom: '4px',
+const MenuItem = styled(ListItem)(({ theme, active }) => ({
+  marginBottom: theme.spacing(0.5),
   padding: theme.spacing(1),
-  cursor: 'pointer',
-  color: '#fff',
+  borderRadius: theme.shape.borderRadius,
+  backgroundColor: active ? alpha(theme.palette.common.white, 0.15) : 'transparent',
   '&:hover': {
     backgroundColor: alpha(theme.palette.common.white, 0.1),
   },
-  ...(active && {
-    backgroundColor: alpha(theme.palette.common.white, 0.15),
-    '& .MuiListItemIcon-root': {
-      color: '#fff',
-    },
-    '& .MuiListItemText-primary': {
-      color: '#fff',
-      fontWeight: 500,
-    },
-  }),
   '& .MuiListItemIcon-root': {
-    color: alpha(theme.palette.common.white, 0.7),
-    minWidth: '40px',
+    minWidth: 0,
+    marginRight: theme.spacing(collapsed => collapsed ? 0 : 2),
+    color: active ? theme.palette.common.white : alpha(theme.palette.common.white, 0.7),
   },
   '& .MuiListItemText-primary': {
-    color: '#fff',
-    fontSize: '0.95rem',
+    color: theme.palette.common.white,
+    fontWeight: active ? 500 : 400,
   },
 }));
 
@@ -92,40 +82,49 @@ function Sidebar({ collapsed, onToggle }) {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleNavigation = (path) => {
+  const handleNavigate = (path) => {
     navigate(path);
   };
 
   return (
-    <StyledBox isCollapsed={collapsed ? 1 : 0}>
+    <StyledBox isCollapsed={collapsed}>
       <SidebarContainer collapsed={collapsed}>
         <TopSection>
-          <ToggleButton onClick={onToggle} size="small">
-            <MenuIcon 
-              sx={{ 
-                transform: collapsed ? 'rotate(180deg)' : 'none',
-                transition: 'transform 0.3s ease',
-                fontSize: '1.2rem'
-              }} 
-            />
+          <ToggleButton onClick={onToggle}>
+            <MenuIcon />
           </ToggleButton>
         </TopSection>
-        <List sx={{ mt: 1 }}>
-          {menuItems.map((item) => (
-            <Tooltip 
-              key={item.text}
-              title={collapsed ? item.text : ''} 
-              placement="right"
-            >
-              <StyledListItem
-                active={location.pathname === item.path ? 1 : 0}
-                onClick={() => handleNavigation(item.path)}
+
+        <List>
+          {menuItems.map((item) => {
+            const isActive = location.pathname === item.path;
+            
+            return collapsed ? (
+              <Tooltip 
+                key={item.path}
+                title={item.title} 
+                placement="right"
+              >
+                <MenuItem
+                  button
+                  active={isActive ? 1 : 0}
+                  onClick={() => handleNavigate(item.path)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                </MenuItem>
+              </Tooltip>
+            ) : (
+              <MenuItem
+                key={item.path}
+                button
+                active={isActive ? 1 : 0}
+                onClick={() => handleNavigate(item.path)}
               >
                 <ListItemIcon>{item.icon}</ListItemIcon>
-                {!collapsed && <ListItemText primary={item.text} />}
-              </StyledListItem>
-            </Tooltip>
-          ))}
+                <ListItemText primary={item.title} />
+              </MenuItem>
+            );
+          })}
         </List>
       </SidebarContainer>
     </StyledBox>

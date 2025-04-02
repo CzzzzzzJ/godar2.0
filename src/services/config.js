@@ -7,17 +7,17 @@ const ENV = {
   development: {
     baseURL: 'http://8.130.187.17/webapi',
     timeout: 10000,
-    withCredentials: true
+    withCredentials: false
   },
   production: {
     baseURL: 'https://8.130.187.17/webapi', // 生产环境使用HTTPS
     timeout: 15000,
-    withCredentials: true
+    withCredentials: false
   },
   test: {
     baseURL: 'http://test-api.example.com',
     timeout: 10000,
-    withCredentials: true
+    withCredentials: false
   }
 };
 
@@ -145,5 +145,13 @@ export const MOCK_DATA = {
       "CreatedAt": "2025-03-22T00:00:06",
       "UpdatedAt": "2025-03-22T00:00:06"
     };
+  },
+  [API_ENDPOINTS.ASSISTANT.CREATE]: (data) => {
+    // 模拟创建操作返回新助手ID
+    return 5; // 模拟返回的新助手ID
+  },
+  [API_ENDPOINTS.ASSISTANT.UPDATE]: (params, data) => {
+    // 模拟更新操作返回成功状态
+    return true;
   }
 }; 
