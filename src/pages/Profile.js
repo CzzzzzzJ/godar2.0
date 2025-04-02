@@ -14,7 +14,14 @@ import {
   CircularProgress,
   Chip,
   Button,
-  IconButton
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
@@ -22,9 +29,11 @@ import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useAuth } from '../contexts/AuthContext';
 import { AssistantService } from '../services';
 import useApi from '../hooks/useApi';
+import { useApiExecution } from '../hooks/useApi';
 import AssistantDetail from '../components/AssistantDetail';
 import AssistantForm from '../components/AssistantForm';
 import { useNavigate } from 'react-router-dom';
@@ -57,6 +66,13 @@ const Profile = () => {
   const [selectedAssistantId, setSelectedAssistantId] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingAssistant, setEditingAssistant] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [assistantToDelete, setAssistantToDelete] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: '',
+    severity: 'success'
+  });
   
   // 使用API Hook获取助手列表
   const { 
@@ -69,6 +85,30 @@ const Profile = () => {
     [userId],
     {
       onError: (err) => console.error('获取AI助手数据失败:', err)
+    }
+  );
+  
+  // 使用API执行钩子删除助手
+  const [deleteAssistant, deleteResult, isDeleting, deleteError] = useApiExecution(
+    AssistantService.deleteAssistant,
+    {
+      onSuccess: () => {
+        setSnackbar({
+          open: true,
+          message: '助手删除成功！',
+          severity: 'success'
+        });
+        setDeleteDialogOpen(false);
+        refreshAssistants();
+      },
+      onError: (error) => {
+        setSnackbar({
+          open: true,
+          message: `删除失败: ${error.message}`,
+          severity: 'error'
+        });
+        setDeleteDialogOpen(false);
+      }
     }
   );
 
@@ -89,8 +129,42 @@ const Profile = () => {
   
   // 处理编辑助手
   const handleEditAssistant = (assistant) => {
-    setEditingAssistant(assistant);
-    setIsFormOpen(true);
+    navigate(`/ai-settings/${assistant.AssistantId}`, { state: { assistant } });
+  };
+  
+  // 处理删除助手
+  const handleDeleteAssistant = () => {
+    setSelectedAssistantId(null);
+    refreshAssistants();
+  };
+  
+  // 打开删除确认对话框
+  const handleOpenDeleteDialog = (assistant, event) => {
+    // 阻止事件冒泡，避免触发卡片的查看详情
+    event.stopPropagation();
+    setAssistantToDelete(assistant);
+    setDeleteDialogOpen(true);
+  };
+  
+  // 确认删除
+  const handleConfirmDelete = async () => {
+    if (assistantToDelete) {
+      await deleteAssistant(assistantToDelete.AssistantId, userId);
+    }
+  };
+  
+  // 取消删除
+  const handleCancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setAssistantToDelete(null);
+  };
+  
+  // 关闭提示弹窗
+  const handleSnackbarClose = () => {
+    setSnackbar(prev => ({
+      ...prev,
+      open: false
+    }));
   };
   
   // 关闭表单
@@ -128,6 +202,7 @@ const Profile = () => {
           assistantId={selectedAssistantId}
           onEdit={handleEditAssistant}
           onBack={handleBackToList}
+          onDelete={handleDeleteAssistant}
         />
       );
     }
@@ -180,12 +255,21 @@ const Profile = () => {
                   }
                   subheader={`创建于: ${formatDate(assistant.CreatedAt)}`}
                   action={
-                    <IconButton 
-                      aria-label="查看详情"
-                      onClick={() => handleViewDetail(assistant.AssistantId)}
-                    >
-                      <InfoIcon />
-                    </IconButton>
+                    <Box display="flex">
+                      <IconButton 
+                        aria-label="删除助手"
+                        onClick={(e) => handleOpenDeleteDialog(assistant, e)}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                      <IconButton 
+                        aria-label="查看详情"
+                        onClick={() => handleViewDetail(assistant.AssistantId)}
+                      >
+                        <InfoIcon />
+                      </IconButton>
+                    </Box>
                   }
                 />
                 <CardContent>
@@ -285,6 +369,55 @@ const Profile = () => {
         userId={userId}
         onSuccess={handleFormSuccess}
       />
+      
+      {/* 删除确认对话框 */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={!isDeleting ? handleCancelDelete : undefined}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description"
+      >
+        <DialogTitle id="alert-dialog-title">
+          确认删除
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="alert-dialog-description">
+            您确定要删除助手"{assistantToDelete?.Name}"吗？此操作无法撤销。
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button 
+            onClick={handleCancelDelete} 
+            disabled={isDeleting}
+          >
+            取消
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            autoFocus
+            disabled={isDeleting}
+            startIcon={isDeleting ? <CircularProgress size={20} /> : null}
+          >
+            {isDeleting ? '删除中...' : '确认删除'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      
+      {/* 提示信息 */}
+      <Snackbar 
+        open={snackbar.open} 
+        autoHideDuration={6000} 
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleSnackbarClose} 
+          severity={snackbar.severity}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };
