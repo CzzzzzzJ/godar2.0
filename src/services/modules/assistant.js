@@ -55,7 +55,37 @@ class AssistantService {
    */
   static async getAssistantDetail(assistantId, options = {}) {
     const endpoint = API_ENDPOINTS.ASSISTANT.DETAIL;
-    return ApiService.get(`${endpoint}/${assistantId}`);
+    const params = { assistantId };
+    
+    // 缓存选项
+    const { useCache = false, cacheTime = 5 * 60 * 1000 } = options;
+    
+    // 如果启用缓存，先尝试从缓存获取
+    if (useCache) {
+      const cachedData = apiCache.get(endpoint, params);
+      if (cachedData) return cachedData;
+    }
+    
+    try {
+      // 发起请求
+      const data = await ApiService.get(`${endpoint}/${assistantId}`);
+      
+      // 如果启用缓存，将结果存入缓存
+      if (useCache) {
+        apiCache.set(endpoint, params, data, cacheTime);
+      }
+      
+      return data;
+    } catch (error) {
+      // 处理错误，如果在生产环境并配置了模拟数据，则返回模拟数据
+      if (process.env.NODE_ENV === 'production' && MOCK_DATA[endpoint]) {
+        console.warn(`API请求失败，使用模拟数据: ${error.message}`);
+        const mockData = MOCK_DATA[endpoint](params);
+        return mockData;
+      }
+      
+      throw error;
+    }
   }
   
   /**

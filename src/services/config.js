@@ -102,7 +102,7 @@ export const API_ENDPOINTS = {
   // AI助手相关
   ASSISTANT: {
     LIST: 'AIAssistant', // 获取AI助手列表
-    DETAIL: 'AIAssistant', // 获取单个AI助手详情
+    DETAIL: 'AIAssistant/details', // 获取单个AI助手详情
     CREATE: 'AIAssistant', // 创建AI助手
     UPDATE: 'AIAssistant', // 更新AI助手
     DELETE: 'AIAssistant' // 删除AI助手
@@ -133,5 +133,17 @@ export const MOCK_DATA = {
         "UpdatedAt": "2025-03-22T00:00:06"
       }
     ];
+  },
+  [API_ENDPOINTS.ASSISTANT.DETAIL]: (params) => {
+    const assistantId = parseInt(params?.assistantId) || 1;
+    return {
+      "AssistantId": assistantId,
+      "UserId": "user123",
+      "Name": "测试",
+      "Greeting": "张辉好帅",
+      "PersonalityTraits": "我是搞笑男",
+      "CreatedAt": "2025-03-22T00:00:06",
+      "UpdatedAt": "2025-03-22T00:00:06"
+    };
   }
 }; 

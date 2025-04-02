@@ -1,151 +1,163 @@
-// API基础URL
-const BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://8.130.187.17/webapi'  // 生产环境使用HTTPS
-  : 'http://8.130.187.17/webapi';  // 开发环境使用HTTP
+import config, { HTTP_METHODS } from './config';
+import ApiErrorHandler from '../utils/errorHandler';
 
 /**
- * API服务封装
+ * 基础API服务类
+ * 处理所有网络请求、响应和错误
  */
 class ApiService {
   /**
-   * 获取用户的AI助手列表
-   * @param {string} userId - 用户ID
-   * @returns {Promise<Array>} - 返回AI助手列表
-   */
-  static async getAIAssistants(userId) {
-    try {
-      const response = await fetch(`${BASE_URL}/AIAssistant/${userId}`, {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API调用失败: ${response.status} ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('[API] 获取AI助手成功:', data);
-      return data;
-    } catch (error) {
-      console.error('[API] 获取AI助手失败:', error);
-      throw error;
-    }
-  }
-  
-  /**
-   * 通用的GET请求方法
+   * 发送HTTP请求
    * @param {string} endpoint - API端点
-   * @param {Object} params - URL参数
-   * @returns {Promise<any>} - 返回API响应
+   * @param {string} method - HTTP方法
+   * @param {Object} data - 请求数据
+   * @param {Object} options - 请求选项
+   * @returns {Promise<any>} - 响应数据
    */
-  static async get(endpoint, params = {}) {
-    const url = new URL(`${BASE_URL}/${endpoint}`);
+  static async request(endpoint, method = HTTP_METHODS.GET, data = null, options = {}) {
+    const { 
+      headers = {}, 
+      params = {}, 
+      timeout = config.timeout,
+      withCredentials = config.withCredentials 
+    } = options;
     
-    // 添加URL参数
-    Object.keys(params).forEach(key => {
-      url.searchParams.append(key, params[key]);
-    });
+    // 构建URL
+    let url = `${config.baseURL}/${endpoint}`;
+    
+    // 添加查询参数
+    if (Object.keys(params).length > 0) {
+      const queryParams = new URLSearchParams();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value);
+        }
+      });
+      
+      const queryString = queryParams.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+    }
+    
+    // 请求配置
+    const requestConfig = {
+      method,
+      headers: {
+        ...config.headers,
+        ...headers
+      },
+      credentials: withCredentials ? 'include' : 'same-origin'
+    };
+    
+    // 添加请求体
+    if (data && method !== HTTP_METHODS.GET) {
+      requestConfig.body = JSON.stringify(data);
+    }
+    
+    // 设置超时
+    const controller = new AbortController();
+    requestConfig.signal = controller.signal;
+    
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, timeout);
     
     try {
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'accept': 'application/json'
-        }
-      });
+      // 发送请求
+      const response = await fetch(url, requestConfig);
+      clearTimeout(timeoutId);
       
+      // 检查响应状态
       if (!response.ok) {
-        throw new Error(`API调用失败: ${response.status} ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        
+        const error = new Error(
+          errorData.message || `请求失败: ${response.status} ${response.statusText}`
+        );
+        error.response = response;
+        error.response.data = errorData;
+        
+        throw error;
       }
       
-      return await response.json();
+      // 解析响应
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      }
+      
+      return await response.text();
     } catch (error) {
-      console.error(`[API] GET请求失败 ${endpoint}:`, error);
+      clearTimeout(timeoutId);
+      
+      // 处理超时错误
+      if (error.name === 'AbortError') {
+        throw new Error(`请求超时: ${endpoint}`);
+      }
+      
+      // 处理网络错误
+      if (!error.response) {
+        throw new Error(`网络错误: ${error.message}`);
+      }
+      
       throw error;
     }
   }
   
   /**
-   * 通用的POST请求方法
+   * 发送GET请求
    * @param {string} endpoint - API端点
-   * @param {Object} data - 请求体数据
-   * @returns {Promise<any>} - 返回API响应
+   * @param {Object} params - 查询参数
+   * @param {Object} options - 请求选项
+   * @returns {Promise<any>} - 响应数据
    */
-  static async post(endpoint, data = {}) {
-    try {
-      const response = await fetch(`${BASE_URL}/${endpoint}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API调用失败: ${response.status} ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error(`[API] POST请求失败 ${endpoint}:`, error);
-      throw error;
-    }
+  static async get(endpoint, params = {}, options = {}) {
+    return this.request(endpoint, HTTP_METHODS.GET, null, { ...options, params });
   }
   
   /**
-   * 通用的PUT请求方法
+   * 发送POST请求
    * @param {string} endpoint - API端点
-   * @param {Object} data - 请求体数据
-   * @returns {Promise<any>} - 返回API响应
+   * @param {Object} data - 请求数据
+   * @param {Object} options - 请求选项
+   * @returns {Promise<any>} - 响应数据
    */
-  static async put(endpoint, data = {}) {
-    try {
-      const response = await fetch(`${BASE_URL}/${endpoint}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'accept': 'application/json'
-        },
-        body: JSON.stringify(data)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API调用失败: ${response.status} ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error(`[API] PUT请求失败 ${endpoint}:`, error);
-      throw error;
-    }
+  static async post(endpoint, data = {}, options = {}) {
+    return this.request(endpoint, HTTP_METHODS.POST, data, options);
   }
   
   /**
-   * 通用的DELETE请求方法
+   * 发送PUT请求
    * @param {string} endpoint - API端点
-   * @returns {Promise<any>} - 返回API响应
+   * @param {Object} data - 请求数据
+   * @param {Object} options - 请求选项
+   * @returns {Promise<any>} - 响应数据
    */
-  static async delete(endpoint) {
-    try {
-      const response = await fetch(`${BASE_URL}/${endpoint}`, {
-        method: 'DELETE',
-        headers: {
-          'accept': 'application/json'
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`API调用失败: ${response.status} ${response.statusText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error(`[API] DELETE请求失败 ${endpoint}:`, error);
-      throw error;
-    }
+  static async put(endpoint, data = {}, options = {}) {
+    return this.request(endpoint, HTTP_METHODS.PUT, data, options);
+  }
+  
+  /**
+   * 发送PATCH请求
+   * @param {string} endpoint - API端点
+   * @param {Object} data - 请求数据
+   * @param {Object} options - 请求选项
+   * @returns {Promise<any>} - 响应数据
+   */
+  static async patch(endpoint, data = {}, options = {}) {
+    return this.request(endpoint, HTTP_METHODS.PATCH, data, options);
+  }
+  
+  /**
+   * 发送DELETE请求
+   * @param {string} endpoint - API端点
+   * @param {Object} params - 查询参数
+   * @param {Object} options - 请求选项
+   * @returns {Promise<any>} - 响应数据
+   */
+  static async delete(endpoint, params = {}, options = {}) {
+    return this.request(endpoint, HTTP_METHODS.DELETE, null, { ...options, params });
   }
 }
 
