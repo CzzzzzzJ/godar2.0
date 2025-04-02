@@ -1,5 +1,7 @@
 // API基础URL
-const BASE_URL = 'http://8.130.187.17/webapi';
+const BASE_URL = process.env.NODE_ENV === 'production'
+  ? 'https://8.130.187.17/webapi'  // 生产环境使用HTTPS
+  : 'http://8.130.187.17/webapi';  // 开发环境使用HTTP
 
 /**
  * API服务封装

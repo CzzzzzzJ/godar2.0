@@ -35,16 +35,33 @@ function App() {
         
         // 延迟2秒后检查状态
         setTimeout(async () => {
-          const status = await checkServiceStatus();
-          if (status && status.hosts && status.hosts.length > 0) {
-            setRegistrationStatus('success');
-          } else {
+          try {
+            const status = await checkServiceStatus();
+            if (status && status.hosts && status.hosts.length > 0) {
+              setRegistrationStatus('success');
+            } else {
+              setRegistrationStatus('error');
+            }
+          } catch (statusError) {
+            console.error('Nacos status check error:', statusError);
+            // 在生产环境中，如果是HTTPS相关问题，不显示错误通知
+            if (process.env.NODE_ENV === 'production' && window.isSecureContext && 
+                (statusError.message.includes('Mixed Content') || statusError.message.includes('Failed to fetch'))) {
+              console.warn('HTTPS环境下无法连接HTTP服务，跳过错误显示');
+              return;
+            }
             setRegistrationStatus('error');
           }
           setOpenSnackbar(true);
         }, 2000);
       } catch (error) {
         console.error('Nacos registration error:', error);
+        // 在生产环境中，如果是HTTPS相关问题，不显示错误通知
+        if (process.env.NODE_ENV === 'production' && window.isSecureContext && 
+            (error.message.includes('Mixed Content') || error.message.includes('Failed to fetch'))) {
+          console.warn('HTTPS环境下无法连接HTTP服务，跳过错误显示');
+          return;
+        }
         setRegistrationStatus('error');
         setOpenSnackbar(true);
       }
