@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 
 // 模拟用户数据
 const mockUser = {
-  id: '1',
+  id: 'user123',
   name: '张泽远',
   avatar: '/avatars/user1.jpg',
   email: 'zhang@example.com',

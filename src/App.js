@@ -18,6 +18,7 @@ import ExpertAdd from './pages/ExpertAdd';
 import AISettings from './pages/AISettings';
 import TokenSettings from './pages/TokenSettings';
 import Favorites from './pages/Favorites';
+import Profile from './pages/Profile';
 // import ArticleEditor from './pages/ArticleEditor';  // 暂时注释掉，等待组件创建
 import { registerService, checkServiceStatus } from './config/nacos';
 
@@ -89,6 +90,7 @@ function App() {
                   <Route path="/ai-settings" element={<AISettings />} />
                   <Route path="/token" element={<TokenSettings />} />
                   <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/profile" element={<Profile />} />
                   {/* <Route path="/article/editor" element={<ArticleEditor />} /> */}
                   <Route path="/" element={<Home />} />
                 </Routes>
