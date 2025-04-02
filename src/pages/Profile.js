@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Container, 
   Grid, 
@@ -19,7 +19,8 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import EmailIcon from '@mui/icons-material/Email';
 import { useAuth } from '../contexts/AuthContext';
-import ApiService from '../services/api';
+import { AssistantService } from '../services';
+import useApi from '../hooks/useApi';
 
 const ProfileInfoItem = styled(Box)(({ theme }) => ({
   display: 'flex',
@@ -42,63 +43,21 @@ const AssistantCard = styled(Card)(({ theme }) => ({
 
 const Profile = () => {
   const { user } = useAuth();
-  const [assistants, setAssistants] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchAssistants = async () => {
-      try {
-        setLoading(true);
-        // 使用user123作为测试用户ID
-        const userId = user?.id || 'user123';
-        
-        // 处理HTTPS环境下的API调用
-        let data;
-        try {
-          data = await ApiService.getAIAssistants(userId);
-        } catch (apiError) {
-          // 如果网络请求失败，在生产环境使用模拟数据
-          if (process.env.NODE_ENV === 'production') {
-            console.warn('API请求失败，使用模拟数据', apiError);
-            data = [
-              {
-                "AssistantId": 2,
-                "UserId": userId,
-                "Name": "专业数据处理专家",
-                "Greeting": "我是专家，可以帮您处理各类数据分析任务",
-                "PersonalityTraits": "专业、高效、细致",
-                "CreatedAt": "2025-03-24T09:28:44",
-                "UpdatedAt": "2025-03-24T09:28:44"
-              },
-              {
-                "AssistantId": 1,
-                "UserId": userId,
-                "Name": "创意助手",
-                "Greeting": "欢迎使用创意助手，让我们一起创造精彩",
-                "PersonalityTraits": "创新、幽默、灵活",
-                "CreatedAt": "2025-03-22T00:00:06",
-                "UpdatedAt": "2025-03-22T00:00:06"
-              }
-            ];
-          } else {
-            // 开发环境中继续抛出错误
-            throw apiError;
-          }
-        }
-        
-        setAssistants(data);
-        setError(null);
-      } catch (err) {
-        console.error('获取AI助手失败:', err);
-        setError('获取AI助手数据失败，请稍后再试。如果您使用HTTPS访问，可能无法连接到HTTP的API服务器。');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAssistants();
-  }, [user]);
+  const userId = user?.id || 'user123';
+  
+  // 使用API Hook获取助手列表
+  const { 
+    data: assistants = [], 
+    loading, 
+    error, 
+    refresh: refreshAssistants 
+  } = useApi(
+    () => AssistantService.getAssistants(userId, { useCache: true }), 
+    [userId],
+    {
+      onError: (err) => console.error('获取AI助手数据失败:', err)
+    }
+  );
 
   // 格式化日期显示
   const formatDate = (dateString) => {
@@ -142,7 +101,7 @@ const Profile = () => {
             
             <ProfileInfoItem>
               <PersonIcon />
-              <Typography>用户ID: {user?.id || 'user123'}</Typography>
+              <Typography>用户ID: {userId}</Typography>
             </ProfileInfoItem>
             
             <ProfileInfoItem>
@@ -161,9 +120,18 @@ const Profile = () => {
         {/* AI助手部分 */}
         <Grid item xs={12} md={8}>
           <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              我的AI助手
-            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+              <Typography variant="h5">我的AI助手</Typography>
+              {!loading && (
+                <Chip 
+                  label="刷新" 
+                  color="primary" 
+                  variant="outlined" 
+                  onClick={refreshAssistants}
+                  size="small"
+                />
+              )}
+            </Box>
             <Divider sx={{ mb: 3 }} />
             
             {loading ? (
@@ -171,7 +139,9 @@ const Profile = () => {
                 <CircularProgress />
               </Box>
             ) : error ? (
-              <Typography color="error" align="center">{error}</Typography>
+              <Typography color="error" align="center">
+                {error.message || '获取AI助手数据失败，请稍后再试'}
+              </Typography>
             ) : assistants.length === 0 ? (
               <Typography align="center" color="text.secondary">
                 您还没有创建AI助手
