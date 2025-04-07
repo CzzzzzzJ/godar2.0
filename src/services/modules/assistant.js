@@ -25,9 +25,26 @@ class AssistantService {
       if (cachedData) return cachedData;
     }
     
+    // 检查是否在Vercel环境中
+    const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+    
     try {
-      // 发起请求
-      const data = await ApiService.get(`${endpoint}/${userId}`);
+      let data;
+      
+      if (isVercel) {
+        // 在Vercel环境中使用API路由
+        console.log('使用Vercel API路由获取AI助手');
+        const response = await fetch(`/api/assistants?userId=${userId}`);
+        
+        if (!response.ok) {
+          throw new Error(`API路由请求失败: ${response.status} ${response.statusText}`);
+        }
+        
+        data = await response.json();
+      } else {
+        // 在非Vercel环境中直接调用API
+        data = await ApiService.get(`${endpoint}/${userId}`);
+      }
       
       // 如果启用缓存，将结果存入缓存
       if (useCache) {
