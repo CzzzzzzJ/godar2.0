@@ -277,14 +277,16 @@ const Profile = () => {
                     {assistant.Greeting}
                   </Typography>
                   <Box>
-                    {assistant.PersonalityTraits.split(',').map((trait, index) => (
-                      <Chip 
-                        key={index}
-                        label={trait.trim()}
-                        size="small"
-                        sx={{ mr: 1, mb: 1 }}
-                      />
-                    ))}
+                    {assistant.PersonalityTraits && typeof assistant.PersonalityTraits === 'string' 
+                      ? assistant.PersonalityTraits.split(',').map((trait, index) => (
+                          <Chip 
+                            key={index}
+                            label={trait.trim()}
+                            size="small"
+                            sx={{ mr: 1, mb: 1 }}
+                          />
+                        ))
+                      : null}
                   </Box>
                 </CardContent>
               </AssistantCard>
