@@ -1,7 +1,8 @@
-import fetch from 'node-fetch';
-import https from 'https';
+// Vercel Serverless Function
+const https = require('https');
+const fetch = require('node-fetch');
 
-// 忽略SSL证书错误
+// 创建不验证SSL证书的agent
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false
 });
@@ -9,62 +10,73 @@ const httpsAgent = new https.Agent({
 // API基础URL
 const API_BASE_URL = 'https://8.130.187.17/webapi';
 
-export default async function handler(req, res) {
-  // 获取请求方法和路径
-  const { method, query, body } = req;
+module.exports = async (req, res) => {
+  // 设置CORS头
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   
-  // 构建目标URL
-  const path = query.path || '';
-  const targetUrl = `${API_BASE_URL}/${path}`;
+  // 处理OPTIONS请求（预检请求）
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  // 获取请求参数
+  const { path, method = req.method } = req.query;
   
-  // 记录请求信息
-  console.log(`[API Proxy] ${method} ${targetUrl}`);
+  if (!path) {
+    return res.status(400).json({ error: true, message: '缺少path参数' });
+  }
+  
+  // 构建API URL
+  const apiUrl = `${API_BASE_URL}/${path}`;
+  
+  console.log(`[Vercel API Proxy] ${method} ${apiUrl}`);
   
   try {
-    // 转发请求
-    const response = await fetch(targetUrl, {
+    // 设置请求选项
+    const options = {
       method,
       headers: {
         'Content-Type': 'application/json',
-        ...req.headers,
-        // 移除可能导致问题的头
-        'host': undefined,
-        'connection': undefined
+        'Accept': 'application/json'
       },
-      body: method !== 'GET' ? JSON.stringify(body) : undefined,
       agent: httpsAgent
-    });
+    };
+    
+    // 如果有请求体，添加到选项中
+    if (req.body && method !== 'GET') {
+      options.body = JSON.stringify(req.body);
+    }
+    
+    // 发送请求
+    const response = await fetch(apiUrl, options);
     
     // 获取响应内容类型
     const contentType = response.headers.get('content-type');
     
-    // 设置响应头
-    res.setHeader('Content-Type', contentType || 'application/json');
-    
-    // 检查响应状态
-    if (!response.ok) {
-      console.error(`[API Proxy] Error: ${response.status} ${response.statusText}`);
-      return res.status(response.status).json({
-        error: true,
-        message: `API请求失败: ${response.status} ${response.statusText}`
-      });
-    }
-    
-    // 解析响应
+    // 获取响应数据
     let data;
     if (contentType && contentType.includes('application/json')) {
       data = await response.json();
     } else {
       data = await response.text();
+      try {
+        // 尝试解析JSON
+        data = JSON.parse(data);
+      } catch (e) {
+        // 不是JSON，保持原样
+      }
     }
     
     // 返回响应
-    return res.status(200).json(data);
+    return res.status(response.status).json(data);
+    
   } catch (error) {
-    console.error('[API Proxy] Error:', error);
+    console.error('[Vercel API Proxy] 错误:', error.message);
     return res.status(500).json({
       error: true,
       message: `代理请求失败: ${error.message}`
     });
   }
-} 
+}; 

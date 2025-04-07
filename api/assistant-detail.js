@@ -26,17 +26,17 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: true, message: '方法不允许' });
   }
   
-  // 获取用户ID
-  const { userId } = req.query;
+  // 获取助手ID
+  const { assistantId } = req.query;
   
-  if (!userId) {
-    return res.status(400).json({ error: true, message: '缺少用户ID参数' });
+  if (!assistantId) {
+    return res.status(400).json({ error: true, message: '缺少助手ID参数' });
   }
   
   // 构建API URL
-  const apiUrl = `${API_BASE_URL}/AIAssistant/${userId}`;
+  const apiUrl = `${API_BASE_URL}/AIAssistant/details/${assistantId}`;
   
-  console.log(`[Vercel API] 获取用户 ${userId} 的AI助手`);
+  console.log(`[Vercel API] 获取助手详情 ID: ${assistantId}`);
   
   try {
     // 发送请求
@@ -63,13 +63,8 @@ module.exports = async (req, res) => {
         data = JSON.parse(data);
       } catch (e) {
         // 不是JSON，保持原样
+        data = {};
       }
-    }
-    
-    // 确保返回的是数组
-    if (!Array.isArray(data)) {
-      console.warn('[Vercel API] 响应不是数组，返回空数组');
-      data = [];
     }
     
     // 返回响应
@@ -77,7 +72,7 @@ module.exports = async (req, res) => {
     
   } catch (error) {
     console.error('[Vercel API] 错误:', error.message);
-    // 返回空数组，避免前端错误
-    return res.status(200).json([]);
+    // 返回空对象，避免前端错误
+    return res.status(200).json({});
   }
 }; 
