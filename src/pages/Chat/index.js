@@ -42,6 +42,8 @@ const ChatContainer = styled(Box)(({ theme }) => ({
   padding: 0,
   position: 'relative',
   overflow: 'hidden',
+  margin: 0,
+  borderRadius: 0,
 }));
 
 const ChatHeader = styled(Box)(({ theme }) => ({
@@ -52,6 +54,7 @@ const ChatHeader = styled(Box)(({ theme }) => ({
   justifyContent: 'space-between',
   backgroundColor: '#FFFFFF',
   height: '72px',
+  zIndex: 10,
 }));
 
 const HeaderLeft = styled(Box)({
@@ -85,6 +88,7 @@ const AssistantStatus = styled(Typography)({
 const ChatMessages = styled(Box)(({ theme }) => ({
   flex: 1,
   padding: theme.spacing(3),
+  paddingBottom: theme.spacing(5),
   overflowY: 'auto',
   backgroundColor: '#F5F7F5',
   '&::-webkit-scrollbar': {
@@ -159,6 +163,12 @@ const ChatInput = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2),
   borderTop: '1px solid #E5E5E5',
   backgroundColor: '#FFFFFF',
+  position: 'sticky',
+  bottom: 0,
+  left: 0,
+  right: 0,
+  zIndex: 10,
+  boxShadow: '0px -2px 10px rgba(0, 0, 0, 0.05)',
 }));
 
 const InputWrapper = styled(Paper)(({ theme }) => ({
@@ -277,6 +287,12 @@ const shortMessageTest = {
   time: '20:10'
 };
 
+// 添加一个底部间距组件
+const MessageListBottomSpacer = styled(Box)(({ theme }) => ({
+  height: '20px', // 底部留白
+  width: '100%',
+}));
+
 function Chat() {
   const { assistantId } = useParams();
   const navigate = useNavigate();
@@ -344,6 +360,9 @@ function Chat() {
       setMessage('');
       setIsLoading(true);
 
+      // 滚动到底部
+      setTimeout(scrollToBottom, 100);
+
       // 模拟AI回复
       setTimeout(() => {
         const aiResponse = {
@@ -358,6 +377,9 @@ function Chat() {
         
         setMessages(prev => [...prev, aiResponse]);
         setIsLoading(false);
+        
+        // 确保AI回复后也滚动到底部
+        setTimeout(scrollToBottom, 100);
       }, 1500);
 
       // 这里可以添加发送消息到服务器的逻辑
@@ -473,6 +495,7 @@ function Chat() {
             </MessageContentContainer>
           </MessageGroup>
         )}
+        <MessageListBottomSpacer />
         <div ref={messagesEndRef} />
       </ChatMessages>
 
