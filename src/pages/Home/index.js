@@ -16,7 +16,8 @@ import {
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import SearchIcon from '@mui/icons-material/Search';
-import ExpertsList from '../../components/ExpertsList';
+// 暂时注释掉这些组件的导入
+// import ExpertsList from '../../components/ExpertsList';
 import CommentsList from '../../components/CommentsList';
 import ChatBox from '../../components/ChatBox';
 import { askQuestion } from '../../services/ai';
@@ -324,9 +325,10 @@ function Home() {
           </ContentContainer>
         </SearchContainer>
 
-        <ExpertsList />
-        <ArticleList />
-        <CommentsList />
+        {/* 暂时注释掉这些组件，后续会重新启用 */}
+        {/* <ExpertsList /> */}
+        {/* <ArticleList /> */}
+        {/* <CommentsList /> */}
       </Container>
     </Box>
   );
