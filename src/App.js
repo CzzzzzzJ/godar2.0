@@ -19,6 +19,7 @@ import AISettings from './pages/AISettings';
 import TokenSettings from './pages/TokenSettings';
 import Favorites from './pages/Favorites';
 import Profile from './pages/Profile';
+import Chat from './pages/Chat';
 // import ArticleEditor from './pages/ArticleEditor';  // 暂时注释掉，等待组件创建
 import { registerService, checkServiceStatus } from './config/nacos';
 
@@ -103,6 +104,7 @@ function App() {
                   <Route path="/register" element={<Register />} />
                   <Route path="/experts" element={<ExpertsPage />} />
                   <Route path="/messages" element={<Messages />} />
+                  <Route path="/chat/:assistantId" element={<Chat />} />
                   <Route path="/expert-add" element={<ExpertAdd />} />
                   <Route path="/ai-settings" element={<AISettings />} />
                   <Route path="/token" element={<TokenSettings />} />
