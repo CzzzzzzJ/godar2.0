@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  Typography, 
-  Box, 
-  Divider, 
-  Avatar, 
+import React, { useState } from "react";
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Divider,
+  Avatar,
   CircularProgress,
   Chip,
   Button,
@@ -15,20 +15,23 @@ import {
   DialogContentText,
   DialogTitle,
   Snackbar,
-  Alert
-} from '@mui/material';
-import { styled } from '@mui/material/styles';
-import { useNavigate } from 'react-router-dom';
-import SmartToyIcon from '@mui/icons-material/SmartToy';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { AssistantService } from '../services';
-import useApi from '../hooks/useApi';
-import { useApiExecution } from '../hooks/useApi';
+  Alert,
+} from "@mui/material";
+import { styled } from "@mui/material/styles";
+import { useNavigate } from "react-router-dom";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import { AssistantService } from "../services";
+import useApi from "../hooks/useApi";
+import { useApiExecution } from "../hooks/useApi";
+import useSWR from "swr";
+import useSWRMutation from "swr/mutation";
+import { deleteFetcher, getFetcher } from "../utils/request/fetcher";
 
 const DetailLabel = styled(Typography)(({ theme }) => ({
-  fontWeight: 'bold',
+  fontWeight: "bold",
   color: theme.palette.text.secondary,
   marginBottom: theme.spacing(0.5),
 }));
@@ -54,40 +57,27 @@ const DetailItem = ({ label, value }) => (
  */
 const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
   const navigate = useNavigate();
-  
-  // 状态管理
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success'
-  });
-  
-  // 使用API Hook获取助手详情
-  const { 
-    data: assistant, 
-    loading, 
-    error, 
-    refresh 
-  } = useApi(
-    () => AssistantService.getAssistantDetail(assistantId, { useCache: true }), 
-    [assistantId],
-    {
-      onError: (err) => console.error('获取AI助手详情失败:', err)
-    }
+  const {
+    data: assistant,
+    isLoading: loading,
+    error,
+    mutate: refresh,
+  } = useSWR(
+    assistantId ? `/AIAssistant/details/${assistantId}` : null,
+    getFetcher
   );
-  
-  // 使用API执行钩子删除助手
-  const [deleteAssistant, deleteResult, isDeleting, deleteError] = useApiExecution(
-    AssistantService.deleteAssistant,
+
+  const { trigger, isMutating: isDeleting } = useSWRMutation(
+    assistantId ? `/AIAssistant/${assistantId}` : null,
+    deleteFetcher,
     {
-      onSuccess: () => {
+      onSuccess() {
         setSnackbar({
           open: true,
-          message: '助手删除成功！',
-          severity: 'success'
+          message: "助手删除成功！",
+          severity: "success",
         });
-        
+
         // 延迟后关闭对话框并执行回调
         setTimeout(() => {
           if (onDelete) onDelete();
@@ -99,11 +89,19 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
         setSnackbar({
           open: true,
           message: `删除失败: ${error.message}`,
-          severity: 'error'
+          severity: "error",
         });
-      }
+      },
     }
   );
+
+  // 状态管理
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // 处理编辑按钮点击
   const handleEdit = () => {
@@ -114,39 +112,39 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
       navigate(`/ai-settings/${assistantId}`, { state: { assistant } });
     }
   };
-  
+
   // 处理删除按钮点击
   const handleDeleteClick = () => {
     setDeleteDialogOpen(true);
   };
-  
+
   // 确认删除
   const handleConfirmDelete = async () => {
     if (assistant && assistant.UserId) {
-      await deleteAssistant(assistantId, assistant.UserId);
+      await trigger();
     }
   };
-  
+
   // 取消删除
   const handleCancelDelete = () => {
     setDeleteDialogOpen(false);
   };
-  
+
   // 关闭提示弹窗
   const handleSnackbarClose = () => {
-    setSnackbar(prev => ({ ...prev, open: false }));
+    setSnackbar((prev) => ({ ...prev, open: false }));
   };
 
   // 格式化日期显示
   const formatDate = (dateString) => {
     try {
       const date = new Date(dateString);
-      return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return date.toLocaleDateString("zh-CN", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     } catch (e) {
       return dateString;
@@ -155,7 +153,12 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
+        minHeight="300px"
+      >
         <CircularProgress />
       </Box>
     );
@@ -163,15 +166,15 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
 
   if (error) {
     return (
-      <Box 
-        display="flex" 
-        flexDirection="column" 
-        justifyContent="center" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
         minHeight="300px"
       >
         <Typography color="error" gutterBottom>
-          {error.message || '获取AI助手详情失败'}
+          {error.message || "获取AI助手详情失败"}
         </Typography>
         <Button variant="outlined" onClick={refresh} sx={{ mt: 2 }}>
           重试
@@ -182,15 +185,13 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
 
   if (!assistant) {
     return (
-      <Box 
-        display="flex" 
-        justifyContent="center" 
-        alignItems="center" 
+      <Box
+        display="flex"
+        justifyContent="center"
+        alignItems="center"
         minHeight="300px"
       >
-        <Typography color="text.secondary">
-          未找到助手信息
-        </Typography>
+        <Typography color="text.secondary">未找到助手信息</Typography>
       </Box>
     );
   }
@@ -200,34 +201,42 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
       <Card elevation={3}>
         <CardContent>
           {/* 头部信息 */}
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={2}
+          >
             <Box display="flex" alignItems="center">
-              <Avatar 
-                sx={{ bgcolor: 'primary.main', mr: 2, width: 56, height: 56 }}
+              <Avatar
+                sx={{ bgcolor: "primary.main", mr: 2, width: 56, height: 56 }}
               >
                 <SmartToyIcon fontSize="large" />
               </Avatar>
               <Box>
                 <Typography variant="h5">{assistant.Name}</Typography>
                 <Box display="flex" alignItems="center" mt={0.5}>
-                  <AccessTimeIcon fontSize="small" sx={{ mr: 0.5, color: 'text.secondary' }} />
+                  <AccessTimeIcon
+                    fontSize="small"
+                    sx={{ mr: 0.5, color: "text.secondary" }}
+                  />
                   <Typography variant="body2" color="text.secondary">
                     创建于 {formatDate(assistant.CreatedAt)}
                   </Typography>
                 </Box>
               </Box>
             </Box>
-            
+
             <Box display="flex" gap={1}>
-              <Button 
-                startIcon={<EditIcon />} 
+              <Button
+                startIcon={<EditIcon />}
                 variant="outlined"
                 onClick={handleEdit}
               >
                 编辑
               </Button>
-              <Button 
-                startIcon={<DeleteIcon />} 
+              <Button
+                startIcon={<DeleteIcon />}
                 variant="outlined"
                 color="error"
                 onClick={handleDeleteClick}
@@ -236,56 +245,58 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
               </Button>
             </Box>
           </Box>
-          
+
           <Divider sx={{ my: 2 }} />
-          
+
           {/* 详细信息 */}
           <Box mt={3}>
             <DetailItem label="助手ID" value={assistant.AssistantId} />
             <DetailItem label="用户ID" value={assistant.UserId} />
-            
-            <DetailItem 
-              label="问候语" 
+
+            <DetailItem
+              label="问候语"
               value={
-                <Typography 
-                  variant="body1" 
-                  component="div" 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: 'background.default', 
+                <Typography
+                  variant="body1"
+                  component="div"
+                  sx={{
+                    p: 2,
+                    bgcolor: "background.default",
                     borderRadius: 1,
-                    fontStyle: 'italic'
+                    fontStyle: "italic",
                   }}
                 >
                   "{assistant.Greeting}"
                 </Typography>
-              } 
+              }
             />
-            
-            <DetailItem 
-              label="性格特点" 
+
+            <DetailItem
+              label="性格特点"
               value={
                 <Box>
-                  {assistant.PersonalityTraits.split(',').map((trait, index) => (
-                    <Chip 
-                      key={index} 
-                      label={trait.trim()} 
-                      size="small" 
-                      color="primary" 
-                      variant="outlined"
-                      sx={{ mr: 1, mb: 1 }}
-                    />
-                  ))}
+                  {assistant.PersonalityTraits.split(",").map(
+                    (trait, index) => (
+                      <Chip
+                        key={index}
+                        label={trait.trim()}
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                        sx={{ mr: 1, mb: 1 }}
+                      />
+                    )
+                  )}
                 </Box>
-              } 
+              }
             />
-            
-            <DetailItem 
-              label="更新时间" 
-              value={formatDate(assistant.UpdatedAt)} 
+
+            <DetailItem
+              label="更新时间"
+              value={formatDate(assistant.UpdatedAt)}
             />
           </Box>
-          
+
           <Box mt={3} display="flex" justifyContent="flex-end">
             <Button variant="text" onClick={onBack}>
               返回列表
@@ -293,7 +304,7 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
           </Box>
         </CardContent>
       </Card>
-      
+
       {/* 删除确认对话框 */}
       <Dialog
         open={deleteDialogOpen}
@@ -301,44 +312,36 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">
-          确认删除
-        </DialogTitle>
+        <DialogTitle id="alert-dialog-title">确认删除</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             您确定要删除助手"{assistant.Name}"吗？此操作无法撤销。
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button 
-            onClick={handleCancelDelete} 
-            disabled={isDeleting}
-          >
+          <Button onClick={handleCancelDelete} disabled={isDeleting}>
             取消
           </Button>
-          <Button 
-            onClick={handleConfirmDelete} 
-            color="error" 
+          <Button
+            onClick={handleConfirmDelete}
+            color="error"
             autoFocus
             disabled={isDeleting}
             startIcon={isDeleting ? <CircularProgress size={20} /> : null}
           >
-            {isDeleting ? '删除中...' : '确认删除'}
+            {isDeleting ? "删除中..." : "确认删除"}
           </Button>
         </DialogActions>
       </Dialog>
-      
+
       {/* 提示信息 */}
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={6000} 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert 
-          onClose={handleSnackbarClose} 
-          severity={snackbar.severity}
-        >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
           {snackbar.message}
         </Alert>
       </Snackbar>
@@ -346,4 +349,4 @@ const AssistantDetail = ({ assistantId, onEdit, onBack, onDelete }) => {
   );
 };
 
-export default AssistantDetail; 
+export default AssistantDetail;

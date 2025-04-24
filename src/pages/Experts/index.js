@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { styled } from '@mui/material/styles';
+import React, { useState } from "react";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Container,
@@ -9,15 +9,17 @@ import {
   Chip,
   Grid,
   IconButton,
-} from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import ExpertCard from '../../components/ExpertCard';
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import FilterListIcon from "@mui/icons-material/FilterList";
+import ExpertCard from "../../components/ExpertCard";
+import useSWR from "swr";
+import { getFetcher } from "../../utils/request/fetcher";
 
 const PageContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3, 0),
-  backgroundColor: '#FFFFFF',
-  minHeight: 'calc(100vh - 64px)',
+  backgroundColor: "#FFFFFF",
+  minHeight: "calc(100vh - 64px)",
 }));
 
 const SearchContainer = styled(Box)(({ theme }) => ({
@@ -25,13 +27,13 @@ const SearchContainer = styled(Box)(({ theme }) => ({
 }));
 
 const SearchField = styled(TextField)(({ theme }) => ({
-  width: '100%',
-  maxWidth: '600px',
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: '#F5F7F5',
+  width: "100%",
+  maxWidth: "600px",
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#F5F7F5",
     borderRadius: theme.shape.borderRadius * 2,
-    '&:hover': {
-      '& .MuiOutlinedInput-notchedOutline': {
+    "&:hover": {
+      "& .MuiOutlinedInput-notchedOutline": {
         borderColor: theme.palette.primary.main,
       },
     },
@@ -47,47 +49,82 @@ const FilterGroup = styled(Box)(({ theme }) => ({
 }));
 
 const FilterTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '14px',
-  color: '#666666',
+  fontSize: "14px",
+  color: "#666666",
   marginBottom: theme.spacing(1),
 }));
 
 const StyledChip = styled(Chip)(({ theme }) => ({
   margin: theme.spacing(0.5),
-  '&.MuiChip-outlined': {
-    borderColor: '#E0E0E0',
+  "&.MuiChip-outlined": {
+    borderColor: "#E0E0E0",
   },
-  '&.MuiChip-filled': {
+  "&.MuiChip-filled": {
     backgroundColor: theme.palette.primary.main,
-    color: '#FFFFFF',
+    color: "#FFFFFF",
   },
 }));
 
 // 模拟筛选数据
 const filterData = {
-  regions: ['全部地区', '中国', '美国', '欧洲', '日本', '澳大利亚', '新加坡', '韩国', '东南亚', '非洲', '其他'],
-  categories: ['全部', '外贸', '科技', '金融', '教育', '文化', '公益', '媒体', '商业服务', '跨境电商'],
-  industries: ['工厂', '物流', '供应链', '电商', '初创团队', '留学', '语言培训', '旅行'],
+  regions: [
+    "全部地区",
+    "中国",
+    "美国",
+    "欧洲",
+    "日本",
+    "澳大利亚",
+    "新加坡",
+    "韩国",
+    "东南亚",
+    "非洲",
+    "其他",
+  ],
+  categories: [
+    "全部",
+    "外贸",
+    "科技",
+    "金融",
+    "教育",
+    "文化",
+    "公益",
+    "媒体",
+    "商业服务",
+    "跨境电商",
+  ],
+  industries: [
+    "工厂",
+    "物流",
+    "供应链",
+    "电商",
+    "初创团队",
+    "留学",
+    "语言培训",
+    "旅行",
+  ],
 };
 
 // 扩展模拟专家数据
-const mockExperts = Array(12).fill(null).map((_, index) => ({
-  id: index + 1,
-  avatar: `/avatars/expert${(index % 5) + 1}.jpg`,
-  name: 'Dr. Jacky Tong',
-  title: '新加坡跨境电商顾问',
-  location: '深圳',
-  specialty: '跨境电商',
-  responseRate: 95,
-  todayResponses: 40,
-  experience: '10年经验',
-}));
+// const mockExperts = Array(12)
+//   .fill(null)
+//   .map((_, index) => ({
+//     id: index + 1,
+//     avatar: `/avatars/expert${(index % 5) + 1}.jpg`,
+//     name: "Dr. Jacky Tong",
+//     title: "新加坡跨境电商顾问",
+//     location: "深圳",
+//     specialty: "跨境电商",
+//     responseRate: 95,
+//     todayResponses: 40,
+//     experience: "10年经验",
+//   }));
 
 function ExpertsPage() {
-  const [selectedRegion, setSelectedRegion] = useState('全部地区');
-  const [selectedCategory, setSelectedCategory] = useState('全部');
+  const [selectedRegion, setSelectedRegion] = useState("全部地区");
+  const [selectedCategory, setSelectedCategory] = useState("全部");
   const [selectedIndustry, setSelectedIndustry] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
+  const { data } = useSWR("/AIAssistant/user123", getFetcher);
 
   const handleSearch = (event) => {
     setSearchQuery(event.target.value);
@@ -95,13 +132,13 @@ function ExpertsPage() {
 
   const handleFilterClick = (type, value) => {
     switch (type) {
-      case 'region':
+      case "region":
         setSelectedRegion(value);
         break;
-      case 'category':
+      case "category":
         setSelectedCategory(value);
         break;
-      case 'industry':
+      case "industry":
         setSelectedIndustry(value === selectedIndustry ? null : value);
         break;
       default:
@@ -142,8 +179,8 @@ function ExpertsPage() {
                 <StyledChip
                   key={region}
                   label={region}
-                  variant={selectedRegion === region ? 'filled' : 'outlined'}
-                  onClick={() => handleFilterClick('region', region)}
+                  variant={selectedRegion === region ? "filled" : "outlined"}
+                  onClick={() => handleFilterClick("region", region)}
                   clickable
                 />
               ))}
@@ -157,8 +194,10 @@ function ExpertsPage() {
                 <StyledChip
                   key={category}
                   label={category}
-                  variant={selectedCategory === category ? 'filled' : 'outlined'}
-                  onClick={() => handleFilterClick('category', category)}
+                  variant={
+                    selectedCategory === category ? "filled" : "outlined"
+                  }
+                  onClick={() => handleFilterClick("category", category)}
                   clickable
                 />
               ))}
@@ -172,8 +211,10 @@ function ExpertsPage() {
                 <StyledChip
                   key={industry}
                   label={industry}
-                  variant={selectedIndustry === industry ? 'filled' : 'outlined'}
-                  onClick={() => handleFilterClick('industry', industry)}
+                  variant={
+                    selectedIndustry === industry ? "filled" : "outlined"
+                  }
+                  onClick={() => handleFilterClick("industry", industry)}
                   clickable
                 />
               ))}
@@ -182,7 +223,7 @@ function ExpertsPage() {
         </FilterSection>
 
         <Grid container spacing={2}>
-          {mockExperts.map((expert) => (
+          {data?.map((expert) => (
             <Grid item xs={12} sm={6} md={3} key={expert.id}>
               <ExpertCard expert={expert} />
             </Grid>
@@ -193,4 +234,4 @@ function ExpertsPage() {
   );
 }
 
-export default ExpertsPage; 
+export default ExpertsPage;
