@@ -124,11 +124,11 @@ export const request = (config) => {
 
 // post 请求函数
 export const post = (options) => {
-  const { url, data, contentType, responseType, params } = options;
+  const { url, data, responseType } = options;
   // console.log(options);
 
   return request({
-    contentType: contentType || "json",
+    headers: { "content-type": "application/json" },
     method: "POST",
     responseType,
     url,
@@ -156,6 +156,7 @@ export const put = (options) => {
   const { url, data } = options;
 
   return request({
+    headers: { "content-type": "application/json" },
     method: "PUT",
     data,
     url,

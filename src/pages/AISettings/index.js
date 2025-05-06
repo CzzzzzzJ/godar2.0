@@ -17,12 +17,17 @@ import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import SearchIcon from "@mui/icons-material/Search";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { AssistantService } from "../../services";
 import { useApiExecution } from "../../hooks/useApi";
 import { useAuth } from "../../contexts/AuthContext";
-import { postFetcher } from "../../utils/request/fetcher";
+import {
+  getFetcher,
+  postFetcher,
+  putFetcher,
+} from "../../utils/request/fetcher";
 import useSWRMutation from "swr/mutation";
+import useSWR from "swr";
 
 const PageContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4, 0),
@@ -239,15 +244,33 @@ function AISettings() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const userId = user?.id || "user123";
-  // const {
-  //   data: assistant,
-  //   isLoading: loading,
-  //   error,
-  //   mutate: refresh,
-  // } = useSWR(
-  //   assistantId ? `/AIAssistant/details/${assistantId}` : null,
+  const params = useParams();
+
+  const { trigger: getKnowledges, data: knowledges } = useSWRMutation(
+    `/Knowledge/categories/${params.assistantId}`,
+    getFetcher
+  );
+
+  const { trigger: postKnowledgeDocuments } = useSWRMutation(
+    `/Knowledge/documents`,
+    postFetcher
+  );
+
+  // const { trigger: getQuestions, data: questions } = useSWRMutation(
+  //   `/AIAssistant/questions/${params.assistantId}`,
   //   getFetcher
   // );
+
+  const { trigger: getAssistantDetails } = useSWRMutation(
+    `/AIAssistant/details/${params.assistantId}`,
+    getFetcher,
+    {
+      onSuccess: (result) => {
+        setSettings(result);
+      },
+    }
+  );
+
   const { trigger: createAssistant, isMutating: isCreating } = useSWRMutation(
     "/AIAssistant",
     postFetcher,
@@ -274,6 +297,40 @@ function AISettings() {
     }
   );
 
+  const { trigger: updateAssistant, isMutating: isUpdating } = useSWRMutation(
+    "/AIAssistant",
+    putFetcher,
+    {
+      onSuccess: (result) => {
+        setSnackbar({
+          open: true,
+          message: "AI助手更新成功！",
+          severity: "success",
+        });
+
+        // 延迟后跳转到个人页面
+        setTimeout(() => {
+          navigate("/profile");
+        }, 1500);
+      },
+      onError: (error) => {
+        setSnackbar({
+          open: true,
+          message: `更新失败: ${error.message}`,
+          severity: "error",
+        });
+      },
+    }
+  );
+
+  React.useEffect(() => {
+    if (params.assistantId) {
+      getAssistantDetails();
+      getKnowledges();
+      // getQuestions();
+    }
+  }, [params.assistantId, getAssistantDetails, getKnowledges]);
+
   // 表单状态
   const [settings, setSettings] = useState({
     Name: "",
@@ -291,6 +348,16 @@ function AISettings() {
     message: "",
     severity: "success",
   });
+
+  const handleCreateKnowledge = () => {
+    postKnowledgeDocuments({
+      CategoryId: 3,
+      Title: "市场营销策略",
+      Content: "收集整理市场分析报告和营销策略方案",
+      FileType: "string",
+      FilePath: "string",
+    });
+  };
 
   // 模拟知识库数据
   const mockKnowledgeBase = [
@@ -373,10 +440,13 @@ function AISettings() {
       Name: settings.Name,
       Greeting: settings.Greeting,
       PersonalityTraits: settings.PersonalityTraits,
+      ...(params.assistantId && { assistantId: params.assistantId }),
     };
 
+    const handler = params.assistantId ? updateAssistant : createAssistant;
+
     // 调用API创建助手
-    await createAssistant(assistantData);
+    await handler(assistantData);
   };
 
   // 处理取消操作
@@ -499,6 +569,7 @@ function AISettings() {
                 variant="contained"
                 color="primary"
                 startIcon={<span className="icon">+</span>}
+                onClick={handleCreateKnowledge}
               >
                 新建文档
               </ActionButton>
@@ -519,42 +590,46 @@ function AISettings() {
             </ActionButtons>
           </Box>
 
-          <KnowledgeGrid>
-            {mockKnowledgeBase.map((item) => (
-              <KnowledgeCard key={item.id}>
-                <CardTitle>
-                  {item.title}
-                  <EditIcon
-                    fontSize="small"
-                    sx={{ color: "#666666", cursor: "pointer" }}
-                  />
-                </CardTitle>
-                <CardDescription>{item.description}</CardDescription>
-                <CardFooter>
-                  <CardStats>
-                    <span>📅 {item.date}</span>
-                    <span>📄 {item.filesCount} 个文档</span>
-                  </CardStats>
-                  <CardActions>
-                    <IconButton size="small">
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton size="small">
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </CardActions>
-                </CardFooter>
-              </KnowledgeCard>
-            ))}
-          </KnowledgeGrid>
+          {knowledges?.length > 0 && (
+            <React.Fragment>
+              <KnowledgeGrid>
+                {knowledges.map((item) => (
+                  <KnowledgeCard key={item.id}>
+                    <CardTitle>
+                      {item.title}
+                      <EditIcon
+                        fontSize="small"
+                        sx={{ color: "#666666", cursor: "pointer" }}
+                      />
+                    </CardTitle>
+                    <CardDescription>{item.description}</CardDescription>
+                    <CardFooter>
+                      <CardStats>
+                        <span>📅 {item.date}</span>
+                        <span>📄 {item.filesCount} 个文档</span>
+                      </CardStats>
+                      <CardActions>
+                        <IconButton size="small">
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                        <IconButton size="small">
+                          <DeleteIcon fontSize="small" />
+                        </IconButton>
+                      </CardActions>
+                    </CardFooter>
+                  </KnowledgeCard>
+                ))}
+              </KnowledgeGrid>
 
-          <Pagination>
-            <Button size="small">上一页</Button>
-            <PageButton active={true}>1</PageButton>
-            <PageButton>2</PageButton>
-            <PageButton>3</PageButton>
-            <Button size="small">下一页</Button>
-          </Pagination>
+              <Pagination>
+                <Button size="small">上一页</Button>
+                <PageButton active={true}>1</PageButton>
+                <PageButton>2</PageButton>
+                <PageButton>3</PageButton>
+                <Button size="small">下一页</Button>
+              </Pagination>
+            </React.Fragment>
+          )}
         </Section>
 
         <ButtonGroup>
@@ -562,7 +637,7 @@ function AISettings() {
             variant="outlined"
             color="primary"
             onClick={handleCancel}
-            disabled={isCreating}
+            disabled={isCreating || isUpdating}
           >
             取消
           </Button>
@@ -570,12 +645,18 @@ function AISettings() {
             variant="contained"
             color="primary"
             onClick={handleSubmit}
-            disabled={isCreating}
+            disabled={isCreating || isUpdating}
             startIcon={
-              isCreating ? <CircularProgress size={20} color="inherit" /> : null
+              isCreating || isUpdating ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : null
             }
           >
-            {isCreating ? "创建中..." : "保存设置"}
+            {isCreating || isUpdating
+              ? !params.assistantId
+                ? "创建中..."
+                : "更新中..."
+              : "保存设置"}
           </Button>
         </ButtonGroup>
       </Container>
