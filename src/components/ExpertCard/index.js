@@ -9,6 +9,7 @@ import {
   Button,
   Chip,
 } from "@mui/material";
+import { Link } from "react-router-dom";
 
 const StyledCard = styled(Card)(({ theme }) => ({
   width: "100%",
@@ -108,6 +109,7 @@ function ExpertCard({ expert }) {
     responseRate,
     todayResponses,
     experience,
+    AssistantId,
   } = expert;
 
   return (
@@ -184,7 +186,9 @@ function ExpertCard({ expert }) {
           },
         }}
       >
-        <ActionButton variant="contained">在线聊天</ActionButton>
+        <Link to={`/chat/${AssistantId}`}>
+          <ActionButton variant="contained">在线聊天</ActionButton>
+        </Link>
         <ActionButton variant="outlined">预约咨询</ActionButton>
       </Box>
     </StyledCard>
