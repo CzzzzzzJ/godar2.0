@@ -88,6 +88,9 @@ const Profile = () => {
     }
   );
   
+  // 确保assistants是数组
+  const assistantsList = Array.isArray(assistants) ? assistants : [];
+  
   // 使用API执行钩子删除助手
   const [deleteAssistant, deleteResult, isDeleting, deleteError] = useApiExecution(
     AssistantService.deleteAssistant,
@@ -236,13 +239,13 @@ const Profile = () => {
           </Button>
         </Box>
         
-        {assistants.length === 0 ? (
+        {assistantsList.length === 0 ? (
           <Typography align="center" color="text.secondary">
             您还没有创建AI助手，点击上方按钮创建第一个助手
           </Typography>
         ) : (
           <List>
-            {assistants.map((assistant) => (
+            {assistantsList.map((assistant) => (
               <AssistantCard key={assistant.AssistantId}>
                 <CardHeader
                   avatar={
@@ -277,14 +280,16 @@ const Profile = () => {
                     {assistant.Greeting}
                   </Typography>
                   <Box>
-                    {assistant.PersonalityTraits.split(',').map((trait, index) => (
-                      <Chip 
-                        key={index}
-                        label={trait.trim()}
-                        size="small"
-                        sx={{ mr: 1, mb: 1 }}
-                      />
-                    ))}
+                    {assistant.PersonalityTraits && typeof assistant.PersonalityTraits === 'string' 
+                      ? assistant.PersonalityTraits.split(',').map((trait, index) => (
+                          <Chip 
+                            key={index}
+                            label={trait.trim()}
+                            size="small"
+                            sx={{ mr: 1, mb: 1 }}
+                          />
+                        ))
+                      : null}
                   </Box>
                 </CardContent>
               </AssistantCard>

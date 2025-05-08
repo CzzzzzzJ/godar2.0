@@ -147,6 +147,12 @@ function Messages() {
     navigate('/expert-add');
   };
 
+  const handleMessageClick = (messageId) => {
+    setSelectedMessage(messageId);
+    // 导航到聊天页面，使用消息ID作为助手ID
+    navigate(`/chat/${messageId}`);
+  };
+
   return (
     <PageContainer>
       <TopSection>
@@ -170,7 +176,7 @@ function Messages() {
           <MessageItem
             key={message.id}
             selected={selectedMessage === message.id}
-            onClick={() => setSelectedMessage(message.id)}
+            onClick={() => handleMessageClick(message.id)}
           >
             <Avatar src={message.avatar} alt={message.name} />
             <MessageContent>

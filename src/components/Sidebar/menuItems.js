@@ -25,16 +25,22 @@ export const menuItems = [
     icon: <MessageIcon />,
     path: '/messages',
   },
+  // 暂时隐藏"我的收藏"菜单项
+  /*
   {
     title: '我的收藏',
     icon: <StarIcon />,
     path: '/favorites',
   },
+  */
+  // 暂时隐藏"使用记录"菜单项
+  /*
   {
     title: '使用记录',
     icon: <HistoryIcon />,
     path: '/history',
   },
+  */
   {
     title: '个人中心',
     icon: <PersonIcon />,
@@ -50,9 +56,12 @@ export const menuItems = [
     icon: <KeyIcon />,
     path: '/token',
   },
+  // 暂时隐藏"问题帮助"菜单项
+  /*
   {
     title: '问题帮助',
     icon: <HelpIcon />,
     path: '/help',
   },
+  */
 ]; 

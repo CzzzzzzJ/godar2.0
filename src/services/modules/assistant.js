@@ -3,6 +3,19 @@ import { API_ENDPOINTS, MOCK_DATA } from '../config';
 import apiCache from '../../utils/apiCache';
 
 /**
+ * 检查是否在Vercel环境中
+ * 更精确的检测包括Vercel预览和生产环境
+ * @returns {boolean}
+ */
+const isVercelEnv = () => {
+  return typeof window !== 'undefined' && 
+    (window.location.hostname.includes('vercel.app') || 
+     window.location.hostname.includes('now.sh') ||
+     process.env.VERCEL || 
+     process.env.NOW);
+};
+
+/**
  * AI助手服务
  */
 class AssistantService {
@@ -26,8 +39,29 @@ class AssistantService {
     }
     
     try {
-      // 发起请求
-      const data = await ApiService.get(`${endpoint}/${userId}`);
+      let data;
+      
+      if (isVercelEnv()) {
+        // 在Vercel环境中使用API路由
+        console.log('使用Vercel API路由获取AI助手');
+        // 使用fetch但添加错误处理
+        const response = await fetch(`/api/assistants?userId=${userId}`);
+        
+        if (!response.ok) {
+          throw new Error(`API路由请求失败: ${response.status} ${response.statusText}`);
+        }
+        
+        data = await response.json();
+        
+        // 确保返回的是数组
+        if (!Array.isArray(data)) {
+          console.warn('API响应不是数组，使用空数组');
+          data = [];
+        }
+      } else {
+        // 在非Vercel环境中直接调用API
+        data = await ApiService.get(`${endpoint}/${userId}`);
+      }
       
       // 如果启用缓存，将结果存入缓存
       if (useCache) {
@@ -43,7 +77,9 @@ class AssistantService {
         return mockData;
       }
       
-      throw error;
+      // 如果没有模拟数据，返回空数组
+      console.error(`获取AI助手失败，返回空数组: ${error.message}`);
+      return [];
     }
   }
   
@@ -67,8 +103,22 @@ class AssistantService {
     }
     
     try {
-      // 发起请求
-      const data = await ApiService.get(`${endpoint}/${assistantId}`);
+      let data;
+      
+      if (isVercelEnv()) {
+        // 在Vercel环境中使用API路由
+        console.log('使用Vercel API路由获取AI助手详情');
+        const response = await fetch(`/api/assistant-detail?assistantId=${assistantId}`);
+        
+        if (!response.ok) {
+          throw new Error(`API路由请求失败: ${response.status} ${response.statusText}`);
+        }
+        
+        data = await response.json();
+      } else {
+        // 在非Vercel环境中直接调用API
+        data = await ApiService.get(`${endpoint}/${assistantId}`);
+      }
       
       // 如果启用缓存，将结果存入缓存
       if (useCache) {
@@ -102,7 +152,29 @@ class AssistantService {
     };
     
     try {
-      const result = await ApiService.post(endpoint, assistantData);
+      let result;
+      
+      if (isVercelEnv()) {
+        // 在Vercel环境中使用API路由
+        console.log('使用Vercel API路由创建AI助手');
+        const response = await fetch('/api/proxy?path=AIAssistant&method=POST', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(assistantData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API路由请求失败: ${response.status} ${response.statusText}`);
+        }
+        
+        result = await response.json();
+      } else {
+        // 在非Vercel环境中直接调用API
+        result = await ApiService.post(endpoint, assistantData);
+      }
+      
       clearCache();
       return result;
     } catch (error) {
@@ -133,7 +205,29 @@ class AssistantService {
     };
     
     try {
-      const result = await ApiService.put(`${endpoint}/${assistantId}`, assistantData);
+      let result;
+      
+      if (isVercelEnv()) {
+        // 在Vercel环境中使用API路由
+        console.log('使用Vercel API路由更新AI助手');
+        const response = await fetch(`/api/proxy?path=AIAssistant/${assistantId}&method=PUT`, {
+          method: 'POST', // 注意：这里用POST，代理会转换为PUT
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(assistantData)
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API路由请求失败: ${response.status} ${response.statusText}`);
+        }
+        
+        result = await response.json();
+      } else {
+        // 在非Vercel环境中直接调用API
+        result = await ApiService.put(`${endpoint}/${assistantId}`, assistantData);
+      }
+      
       clearCache();
       return result;
     } catch (error) {
@@ -163,7 +257,25 @@ class AssistantService {
     };
     
     try {
-      const result = await ApiService.delete(`${endpoint}/${assistantId}`);
+      let result;
+      
+      if (isVercelEnv()) {
+        // 在Vercel环境中使用API路由
+        console.log('使用Vercel API路由删除AI助手');
+        const response = await fetch(`/api/proxy?path=AIAssistant/${assistantId}&method=DELETE`, {
+          method: 'POST' // 注意：这里用POST，代理会转换为DELETE
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API路由请求失败: ${response.status} ${response.statusText}`);
+        }
+        
+        result = await response.json();
+      } else {
+        // 在非Vercel环境中直接调用API
+        result = await ApiService.delete(`${endpoint}/${assistantId}`);
+      }
+      
       clearCache();
       return result;
     } catch (error) {
