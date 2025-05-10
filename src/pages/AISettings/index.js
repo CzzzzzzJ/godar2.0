@@ -12,6 +12,7 @@ import {
   Snackbar,
   Alert,
   CircularProgress,
+  Dialog,
 } from "@mui/material";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import SearchIcon from "@mui/icons-material/Search";
@@ -28,6 +29,9 @@ import {
 } from "../../utils/request/fetcher";
 import useSWRMutation from "swr/mutation";
 import useSWR from "swr";
+import Modal from "../../components/Modal";
+import KnowledgeCategoryForm from "./components/KnowledgeDocumentForm";
+import KnowledgeDocumentForm from "./components/KnowledgeDocumentForm";
 
 const PageContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4, 0),
@@ -245,6 +249,8 @@ function AISettings() {
   const { user } = useAuth();
   const userId = user?.id || "user123";
   const params = useParams();
+  const modalRef = React.useRef();
+  const documentModalRef = React.useRef();
 
   const { trigger: getKnowledges, data: knowledges } = useSWRMutation(
     `/Knowledge/categories/${params.assistantId}`,
@@ -349,14 +355,19 @@ function AISettings() {
     severity: "success",
   });
 
+  const handleCreateDocument = () => {
+    documentModalRef.current?.onToggle();
+  };
+
   const handleCreateKnowledge = () => {
-    postKnowledgeDocuments({
-      CategoryId: 3,
-      Title: "市场营销策略",
-      Content: "收集整理市场分析报告和营销策略方案",
-      FileType: "string",
-      FilePath: "string",
-    });
+    modalRef.current?.onToggle();
+    // postKnowledgeDocuments({
+    //   CategoryId: 3,
+    //   Title: "市场营销策略",
+    //   Content: "收集整理市场分析报告和营销策略方案",
+    //   FileType: "string",
+    //   FilePath: "string",
+    // });
   };
 
   // 模拟知识库数据
@@ -571,12 +582,13 @@ function AISettings() {
                 startIcon={<span className="icon">+</span>}
                 onClick={handleCreateKnowledge}
               >
-                新建文档
+                新建分类
               </ActionButton>
               <ActionButton
                 variant="contained"
                 color="primary"
                 startIcon={<span className="icon">↑</span>}
+                onClick={handleCreateDocument}
               >
                 上传文档
               </ActionButton>
@@ -672,6 +684,12 @@ function AISettings() {
           {snackbar.message}
         </Alert>
       </Snackbar>
+      <Modal ref={modalRef} title="新建分类">
+        <KnowledgeCategoryForm />
+      </Modal>
+      <Modal ref={documentModalRef} title="新建文档">
+        <KnowledgeDocumentForm />
+      </Modal>
     </PageContainer>
   );
 }
