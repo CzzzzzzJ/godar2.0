@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { styled } from '@mui/material/styles';
+import React, { useState } from "react";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Container,
@@ -10,89 +10,90 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
-} from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
-import EmailIcon from '@mui/icons-material/Email';
-import LockIcon from '@mui/icons-material/Lock';
-import PersonIcon from '@mui/icons-material/Person';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
+import PersonIcon from "@mui/icons-material/Person";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import useSWRMutation from "swr/mutation";
 
 const RegisterContainer = styled(Box)(({ theme }) => ({
-  minHeight: 'calc(100vh - 48px)',
-  display: 'flex',
-  flexDirection: 'column',
-  backgroundColor: '#FFFFFF',
+  minHeight: "calc(100vh - 48px)",
+  display: "flex",
+  flexDirection: "column",
+  backgroundColor: "#FFFFFF",
 }));
 
 const RegisterContent = styled(Container)(({ theme }) => ({
   flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
   paddingTop: theme.spacing(6),
-  maxWidth: '440px !important',
+  maxWidth: "440px !important",
 }));
 
 const RegisterForm = styled(Box)(({ theme }) => ({
-  width: '100%',
+  width: "100%",
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   marginBottom: theme.spacing(3),
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: '#F5F7F5',
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#F5F7F5",
   },
 }));
 
 const RegisterButton = styled(Button)(({ theme }) => ({
-  width: '100%',
-  height: '48px',
-  fontSize: '16px',
+  width: "100%",
+  height: "48px",
+  fontSize: "16px",
   marginBottom: theme.spacing(4),
 }));
 
 const ThirdPartyLogin = styled(Box)(({ theme }) => ({
-  textAlign: 'center',
-  '& .title': {
-    color: '#999999',
-    fontSize: '14px',
+  textAlign: "center",
+  "& .title": {
+    color: "#999999",
+    fontSize: "14px",
     marginBottom: theme.spacing(2),
   },
 }));
 
 const ThirdPartyButtons = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'center',
+  display: "flex",
+  justifyContent: "center",
   gap: theme.spacing(3),
   marginBottom: theme.spacing(3),
-  '& img': {
-    width: '32px',
-    height: '32px',
-    cursor: 'pointer',
+  "& img": {
+    width: "32px",
+    height: "32px",
+    cursor: "pointer",
   },
 }));
 
 const LoginLink = styled(Box)(({ theme }) => ({
-  textAlign: 'center',
-  color: '#666666',
-  fontSize: '14px',
-  '& a': {
+  textAlign: "center",
+  color: "#666666",
+  fontSize: "14px",
+  "& a": {
     color: theme.palette.primary.main,
-    textDecoration: 'none',
+    textDecoration: "none",
     marginLeft: theme.spacing(1),
   },
 }));
 
 const TermsCheckbox = styled(Box)(({ theme }) => ({
   marginBottom: theme.spacing(3),
-  '& .MuiFormControlLabel-label': {
-    fontSize: '14px',
-    color: '#666666',
+  "& .MuiFormControlLabel-label": {
+    fontSize: "14px",
+    color: "#666666",
   },
-  '& a': {
+  "& a": {
     color: theme.palette.primary.main,
-    textDecoration: 'none',
+    textDecoration: "none",
   },
 }));
 
@@ -100,6 +101,7 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const {} = useSWRMutation("");
 
   return (
     <RegisterContainer>
@@ -135,7 +137,7 @@ function Register() {
 
           <StyledTextField
             fullWidth
-            type={showPassword ? 'text' : 'password'}
+            type={showPassword ? "text" : "password"}
             placeholder="请输入密码"
             InputProps={{
               startAdornment: (
@@ -158,7 +160,7 @@ function Register() {
 
           <StyledTextField
             fullWidth
-            type={showConfirmPassword ? 'text' : 'password'}
+            type={showConfirmPassword ? "text" : "password"}
             placeholder="请确认密码"
             InputProps={{
               startAdornment: (
@@ -172,7 +174,11 @@ function Register() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     edge="end"
                   >
-                    {showConfirmPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                    {showConfirmPassword ? (
+                      <VisibilityOffIcon />
+                    ) : (
+                      <VisibilityIcon />
+                    )}
                   </IconButton>
                 </InputAdornment>
               ),
@@ -185,8 +191,7 @@ function Register() {
               label={
                 <span>
                   我已阅读并同意
-                  <Link to="/terms">《用户协议》</Link>
-                  和
+                  <Link to="/terms">《用户协议》</Link>和
                   <Link to="/privacy">《隐私政策》</Link>
                 </span>
               }
@@ -216,4 +221,4 @@ function Register() {
   );
 }
 
-export default Register; 
+export default Register;
