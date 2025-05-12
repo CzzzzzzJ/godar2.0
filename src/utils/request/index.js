@@ -1,6 +1,7 @@
 import * as axios from "axios";
 
 import { RequestConfig, config, getContentType } from "./config";
+import localStorage from "../storage";
 
 // 创建请求实例
 const http = axios.default.create(config);
@@ -12,11 +13,11 @@ const http = axios.default.create(config);
 http.interceptors.request.use(
   function request(config) {
     if (config.headers) {
-      // const userToken = localStorage.get("userToken");
       // config.headers["Content-Type"] = getContentType(config.contentType);
-      // if (userToken != null) {
-      //   config.headers["Authorization"] = `Bearer ${userToken}`;
-      // }
+      const userToken = localStorage.get("userToken");
+      if (userToken != null) {
+        config.headers["Authorization"] = `Bearer ${userToken}`;
+      }
     }
 
     // 文件类型请求需要将文件内容拼接到form表单里
@@ -86,7 +87,7 @@ http.interceptors.response.use(
     let msg;
     switch (status) {
       case 401:
-        window.location.href = "/signin";
+        window.location.href = "/login";
       case 500:
         msg = "服务器错误";
         break;

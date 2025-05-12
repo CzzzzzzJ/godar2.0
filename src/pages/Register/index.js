@@ -10,14 +10,19 @@ import {
   FormControlLabel,
   IconButton,
   InputAdornment,
+  Snackbar,
+  Alert,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Router, useNavigate } from "react-router-dom";
 import EmailIcon from "@mui/icons-material/Email";
 import LockIcon from "@mui/icons-material/Lock";
 import PersonIcon from "@mui/icons-material/Person";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import useSWRMutation from "swr/mutation";
+import { postFetcher } from "../../utils/request/fetcher";
+import { post } from "../../utils/request";
+import { GODAR_REQUEST_URL } from "../../config";
 
 const RegisterContainer = styled(Box)(({ theme }) => ({
   minHeight: "calc(100vh - 48px)",
@@ -101,7 +106,96 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
-  const {} = useSWRMutation("");
+  const { trigger } = useSWRMutation(
+    "/godar/loginRegister/register",
+    postFetcher
+  );
+  // 表单错误状态
+  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = React.useState({
+    accountName: "",
+    email: "",
+    loginPassword: "",
+    confirmPassword: "",
+    isAgreed: false,
+  });
+  // 弹窗状态
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  // 表单验证
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.accountName.trim()) {
+      newErrors.accountName = "用户名不能为空";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "邮箱不能为空";
+    }
+
+    if (!formData.loginPassword.trim()) {
+      newErrors.loginPassword = "密码不能为空";
+    }
+
+    if (!formData.confirmPassword.trim()) {
+      newErrors.confirmPassword = "确认密码不能为空";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (field) => (evt) => {
+    const { value } = evt.target;
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    console.log(formData);
+    //
+    if (!validateForm()) {
+      setSnackbar({
+        open: true,
+        message: "请完善表单信息",
+        severity: "warning",
+      });
+      return;
+    }
+
+    if (!formData.isAgreed) {
+      setSnackbar({
+        open: true,
+        message: "请勾选用户协议",
+        severity: "warning",
+      });
+      return;
+    }
+
+    post({
+      url: GODAR_REQUEST_URL + "/loginRegister/register",
+      data: { ...formData, regesterType: 2 },
+    }).then(() => {
+      navigate("/login");
+      setSnackbar({
+        open: true,
+        message: "注册成功",
+        severity: "success",
+      });
+    });
+  };
+
+  // 关闭提示弹窗
+  const handleSnackbarClose = () => {
+    setSnackbar((prev) => ({
+      ...prev,
+      open: false,
+    }));
+  };
 
   return (
     <RegisterContainer>
@@ -114,6 +208,10 @@ function Register() {
           <StyledTextField
             fullWidth
             placeholder="请输入用户名"
+            onChange={handleChange("accountName")}
+            required
+            error={!!errors.accountName}
+            helperText={errors.accountName}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -126,6 +224,10 @@ function Register() {
           <StyledTextField
             fullWidth
             placeholder="请输入电子邮箱"
+            onChange={handleChange("email")}
+            required
+            error={!!errors.email}
+            helperText={errors.email}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -139,6 +241,10 @@ function Register() {
             fullWidth
             type={showPassword ? "text" : "password"}
             placeholder="请输入密码"
+            onChange={handleChange("loginPassword")}
+            required
+            error={!!errors.loginPassword}
+            helperText={errors.loginPassword}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -162,6 +268,10 @@ function Register() {
             fullWidth
             type={showConfirmPassword ? "text" : "password"}
             placeholder="请确认密码"
+            onChange={handleChange("confirmPassword")}
+            required
+            error={!!errors.confirmPassword}
+            helperText={errors.confirmPassword}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -185,7 +295,7 @@ function Register() {
             }}
           />
 
-          <TermsCheckbox>
+          <TermsCheckbox onChange={handleChange("isAgreed")}>
             <FormControlLabel
               control={<Checkbox />}
               label={
@@ -198,7 +308,11 @@ function Register() {
             />
           </TermsCheckbox>
 
-          <RegisterButton variant="contained" color="primary">
+          <RegisterButton
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+          >
             注册账号
           </RegisterButton>
 
@@ -217,6 +331,17 @@ function Register() {
           </LoginLink>
         </RegisterForm>
       </RegisterContent>
+      {/* 提示信息 */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </RegisterContainer>
   );
 }
