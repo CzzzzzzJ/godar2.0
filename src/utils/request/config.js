@@ -1,7 +1,8 @@
 import qs from "qs";
+import { REQUEST_URL } from "../../config";
 
 export const config = {
-  baseURL: "http://8.130.187.17/webapi",
+  baseURL: REQUEST_URL,
   responseType: "json",
   timeout: 120000, // 60s超时
   withCredentials: false, // 是否允许携带cookie

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { styled } from '@mui/material/styles';
+import React, { useState } from "react";
+import { styled } from "@mui/material/styles";
 import {
   Box,
   Container,
@@ -12,109 +12,114 @@ import {
   Tab,
   IconButton,
   InputAdornment,
-} from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
-import EmailIcon from '@mui/icons-material/Email';
-import LockIcon from '@mui/icons-material/Lock';
-import PhoneIcon from '@mui/icons-material/Phone';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+  Snackbar,
+  Alert,
+} from "@mui/material";
+import { Link, useNavigate } from "react-router-dom";
+import EmailIcon from "@mui/icons-material/Email";
+import LockIcon from "@mui/icons-material/Lock";
+import PhoneIcon from "@mui/icons-material/Phone";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import { post } from "../../utils/request";
+import { GODAR_REQUEST_URL } from "../../config";
+import localStorage from "../../utils/storage";
 
 const LoginContainer = styled(Box)(({ theme }) => ({
-  minHeight: 'calc(100vh - 48px)',
-  display: 'flex',
-  flexDirection: 'column',
-  backgroundColor: '#FFFFFF',
+  minHeight: "calc(100vh - 48px)",
+  display: "flex",
+  flexDirection: "column",
+  backgroundColor: "#FFFFFF",
 }));
 
 const LoginContent = styled(Container)(({ theme }) => ({
   flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
   paddingTop: theme.spacing(6),
-  maxWidth: '440px !important',
+  maxWidth: "440px !important",
 }));
 
 const StyledTabs = styled(Tabs)(({ theme }) => ({
   marginBottom: theme.spacing(4),
-  width: '100%',
-  '& .MuiTabs-indicator': {
-    height: '2px',
+  width: "100%",
+  "& .MuiTabs-indicator": {
+    height: "2px",
   },
-  '& .MuiTab-root': {
-    fontSize: '14px',
+  "& .MuiTab-root": {
+    fontSize: "14px",
     fontWeight: 500,
-    minWidth: '120px',
-    padding: '12px 16px',
-    color: '#666666',
-    '&.Mui-selected': {
+    minWidth: "120px",
+    padding: "12px 16px",
+    color: "#666666",
+    "&.Mui-selected": {
       color: theme.palette.primary.main,
     },
   },
-  '& .MuiTabs-flexContainer': {
-    justifyContent: 'center',
+  "& .MuiTabs-flexContainer": {
+    justifyContent: "center",
   },
 }));
 
 const StyledTab = styled(Tab)({
-  whiteSpace: 'nowrap',
-  minHeight: '48px',
+  whiteSpace: "nowrap",
+  minHeight: "48px",
 });
 
 const LoginForm = styled(Box)(({ theme }) => ({
-  width: '100%',
+  width: "100%",
 }));
 
 const StyledTextField = styled(TextField)(({ theme }) => ({
   marginBottom: theme.spacing(3),
-  '& .MuiOutlinedInput-root': {
-    backgroundColor: '#F5F7F5',
+  "& .MuiOutlinedInput-root": {
+    backgroundColor: "#F5F7F5",
   },
 }));
 
 const RememberForgot = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
   marginBottom: theme.spacing(3),
 }));
 
 const LoginButton = styled(Button)(({ theme }) => ({
-  width: '100%',
-  height: '48px',
-  fontSize: '16px',
+  width: "100%",
+  height: "48px",
+  fontSize: "16px",
   marginBottom: theme.spacing(4),
 }));
 
 const ThirdPartyLogin = styled(Box)(({ theme }) => ({
-  textAlign: 'center',
-  '& .title': {
-    color: '#999999',
-    fontSize: '14px',
+  textAlign: "center",
+  "& .title": {
+    color: "#999999",
+    fontSize: "14px",
     marginBottom: theme.spacing(2),
   },
 }));
 
 const ThirdPartyButtons = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  justifyContent: 'center',
+  display: "flex",
+  justifyContent: "center",
   gap: theme.spacing(3),
   marginBottom: theme.spacing(3),
-  '& img': {
-    width: '32px',
-    height: '32px',
-    cursor: 'pointer',
+  "& img": {
+    width: "32px",
+    height: "32px",
+    cursor: "pointer",
   },
 }));
 
 const RegisterLink = styled(Box)(({ theme }) => ({
-  textAlign: 'center',
-  color: '#666666',
-  fontSize: '14px',
-  '& a': {
+  textAlign: "center",
+  color: "#666666",
+  fontSize: "14px",
+  "& a": {
     color: theme.palette.primary.main,
-    textDecoration: 'none',
+    textDecoration: "none",
     marginLeft: theme.spacing(1),
   },
 }));
@@ -123,9 +128,73 @@ function Login() {
   const [loginType, setLoginType] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  // 表单错误状态
+  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = React.useState({
+    email: "",
+    password: "",
+  });
+  // 弹窗状态
+  const [snackbar, setSnackbar] = React.useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+
+  // 表单验证
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.email.trim()) {
+      newErrors.email = "邮箱不能为空";
+    }
+
+    if (!formData.password.trim()) {
+      newErrors.password = "密码不能为空";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleLoginTypeChange = (event, newValue) => {
+    console.log(newValue);
     setLoginType(newValue);
+  };
+
+  const handleChange = (field) => (evt) => {
+    const { value } = evt.target;
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = () => {
+    if (!validateForm()) {
+      setSnackbar({
+        open: true,
+        message: "请完善表单信息",
+        severity: "warning",
+      });
+      return;
+    }
+
+    post({
+      url: GODAR_REQUEST_URL + "/loginRegister/login",
+      data: { ...formData, loginMethod: loginType === 0 ? 2 : 1 },
+    }).then(({ data }) => {
+      localStorage.set("userToken", data.access_token);
+      setSnackbar({ open: true, message: "登录成功", severity: "success" });
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 600);
+    });
+  };
+
+  // 关闭提示弹窗
+  const handleSnackbarClose = () => {
+    setSnackbar((prev) => ({
+      ...prev,
+      open: false,
+    }));
   };
 
   return (
@@ -150,6 +219,7 @@ function Login() {
               <StyledTextField
                 fullWidth
                 placeholder="请输入邮箱"
+                onChange={handleChange("email")}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -160,8 +230,9 @@ function Login() {
               />
               <StyledTextField
                 fullWidth
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 placeholder="请输入密码"
+                onChange={handleChange("password")}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -174,7 +245,11 @@ function Login() {
                         onClick={() => setShowPassword(!showPassword)}
                         edge="end"
                       >
-                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        {showPassword ? (
+                          <VisibilityOffIcon />
+                        ) : (
+                          <VisibilityIcon />
+                        )}
                       </IconButton>
                     </InputAdornment>
                   ),
@@ -209,16 +284,20 @@ function Login() {
           )}
 
           <RememberForgot>
-            <FormControlLabel
-              control={<Checkbox />}
-              label="记住密码"
-            />
-            <Link to="/forgot-password" style={{ color: '#666666', textDecoration: 'none' }}>
+            <FormControlLabel control={<Checkbox />} label="记住密码" />
+            <Link
+              to="/forgot-password"
+              style={{ color: "#666666", textDecoration: "none" }}
+            >
               忘记密码？
             </Link>
           </RememberForgot>
 
-          <LoginButton variant="contained" color="primary">
+          <LoginButton
+            variant="contained"
+            color="primary"
+            onClick={handleSubmit}
+          >
             登录
           </LoginButton>
 
@@ -237,8 +316,18 @@ function Login() {
           </RegisterLink>
         </LoginForm>
       </LoginContent>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </LoginContainer>
   );
 }
 
-export default Login; 
+export default Login;
