@@ -21,7 +21,7 @@ import LockIcon from "@mui/icons-material/Lock";
 import PhoneIcon from "@mui/icons-material/Phone";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import { post } from "../../utils/request";
+import { get, post } from "../../utils/request";
 import { GODAR_REQUEST_URL } from "../../config";
 import localStorage from "../../utils/storage";
 
@@ -124,6 +124,8 @@ const RegisterLink = styled(Box)(({ theme }) => ({
   },
 }));
 
+const MAX_COUNT_DOWN = 60;
+
 function Login() {
   const [loginType, setLoginType] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
@@ -133,6 +135,8 @@ function Login() {
   const [formData, setFormData] = React.useState({
     email: "",
     password: "",
+    phone: "",
+    smsCode: "",
   });
   // 弹窗状态
   const [snackbar, setSnackbar] = React.useState({
@@ -140,17 +144,31 @@ function Login() {
     message: "",
     severity: "success",
   });
+  const [countDown, setCountdown] = useState(MAX_COUNT_DOWN);
+  const timerRef = React.useRef(-1);
 
   // 表单验证
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.email.trim()) {
-      newErrors.email = "邮箱不能为空";
+    if (loginType === 0) {
+      if (!formData.email.trim()) {
+        newErrors.email = "邮箱不能为空";
+      }
+
+      if (!formData.password.trim()) {
+        newErrors.password = "密码不能为空";
+      }
     }
 
-    if (!formData.password.trim()) {
-      newErrors.password = "密码不能为空";
+    if (loginType === 1) {
+      if (!formData.phone.trim()) {
+        newErrors.phone = "手机号不能为空";
+      }
+
+      if (!formData.smsCode.trim()) {
+        newErrors.smsCode = "验证码不能为空";
+      }
     }
 
     setErrors(newErrors);
@@ -164,7 +182,41 @@ function Login() {
 
   const handleChange = (field) => (evt) => {
     const { value } = evt.target;
+    if (value) {
+      delete errors[field];
+    }
     setFormData((prev) => ({ ...prev, [field]: value }));
+    setErrors(errors);
+  };
+
+  const handleSendSmsCode = () => {
+    if (countDown < MAX_COUNT_DOWN) {
+      return;
+    }
+
+    const newErrors = {};
+    if (!formData.phone.trim()) {
+      newErrors.phone = "手机号不能为空";
+      setErrors(newErrors);
+      return;
+    }
+
+    get({
+      url:
+        GODAR_REQUEST_URL +
+        `/loginRegister/generateCode?phone=${formData.phone}&method=login`,
+    }).then(() => {
+      setCountdown((prev) => (prev -= 1));
+      timerRef.current = setInterval(() => {
+        setCountdown((prev) => (prev -= 1));
+      }, 1000);
+
+      setSnackbar({
+        open: true,
+        message: "验证码发送成功，请注意查收",
+        severity: "success",
+      });
+    });
   };
 
   const handleSubmit = () => {
@@ -179,7 +231,7 @@ function Login() {
 
     post({
       url: GODAR_REQUEST_URL + "/loginRegister/login",
-      data: { ...formData, loginMethod: loginType === 0 ? 2 : 1 },
+      data: { ...formData, loginMethod: !loginType ? 2 : 1 },
     }).then(({ data }) => {
       localStorage.set("userToken", data.access_token);
       setSnackbar({ open: true, message: "登录成功", severity: "success" });
@@ -220,6 +272,9 @@ function Login() {
                 fullWidth
                 placeholder="请输入邮箱"
                 onChange={handleChange("email")}
+                required
+                error={!!errors.email}
+                helperText={errors.email}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -233,6 +288,9 @@ function Login() {
                 type={showPassword ? "text" : "password"}
                 placeholder="请输入密码"
                 onChange={handleChange("password")}
+                required
+                error={!!errors.password}
+                helperText={errors.password}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -261,6 +319,10 @@ function Login() {
               <StyledTextField
                 fullWidth
                 placeholder="请输入手机号"
+                onChange={handleChange("phone")}
+                required
+                error={!!errors.phone}
+                helperText={errors.phone}
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position="start">
@@ -272,10 +334,18 @@ function Login() {
               <StyledTextField
                 fullWidth
                 placeholder="请输入验证码"
+                onChange={handleChange("smsCode")}
+                required
+                error={!!errors.smsCode}
+                helperText={errors.smsCode}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button>获取验证码</Button>
+                      <Button onClick={handleSendSmsCode}>
+                        {countDown < MAX_COUNT_DOWN
+                          ? `${countDown} s`
+                          : "获取验证码"}
+                      </Button>
                     </InputAdornment>
                   ),
                 }}
@@ -301,14 +371,14 @@ function Login() {
             登录
           </LoginButton>
 
-          <ThirdPartyLogin>
+          {/* <ThirdPartyLogin>
             <Typography className="title">其他登录方式</Typography>
             <ThirdPartyButtons>
               <img src="/icons/wechat.png" alt="WeChat" />
               <img src="/icons/github.png" alt="GitHub" />
               <img src="/icons/linkedin.png" alt="LinkedIn" />
             </ThirdPartyButtons>
-          </ThirdPartyLogin>
+          </ThirdPartyLogin> */}
 
           <RegisterLink>
             <Box component="span">还没有账号？</Box>
