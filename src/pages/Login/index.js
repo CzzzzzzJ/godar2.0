@@ -231,7 +231,11 @@ function Login() {
 
     post({
       url: GODAR_REQUEST_URL + "/loginRegister/login",
-      data: { ...formData, loginMethod: !loginType ? 2 : 1 },
+      data: {
+        ...formData,
+        loginMethod: !loginType ? 2 : 1,
+        email: !loginType ? formData.email : undefined,
+      },
     }).then(({ data }) => {
       localStorage.set("userToken", data.access_token);
       setSnackbar({ open: true, message: "登录成功", severity: "success" });
@@ -248,6 +252,20 @@ function Login() {
       open: false,
     }));
   };
+
+  React.useEffect(() => {
+    if (countDown < 0) {
+      clearInterval(timerRef.current);
+      setCountdown(MAX_COUNT_DOWN);
+    }
+  }, [countDown]);
+
+  React.useEffect(() => {
+    return () => {
+      clearInterval(timerRef.current);
+      setCountdown(MAX_COUNT_DOWN);
+    };
+  }, []);
 
   return (
     <LoginContainer>

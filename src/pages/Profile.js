@@ -40,6 +40,8 @@ import { useNavigate } from "react-router-dom";
 import useSWR from "swr";
 import { deleteFetcher, getFetcher } from "../utils/request/fetcher";
 import useSWRMutation from "swr/mutation";
+import { get } from "../utils/request";
+import { GODAR_REQUEST_URL } from "../config";
 
 const ProfileInfoItem = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -61,8 +63,8 @@ const AssistantCard = styled(Card)(({ theme }) => ({
 }));
 
 const Profile = () => {
-  const { user } = useAuth();
-  const userId = user?.id || "user123";
+  const [userInfo, setUserInfo] = React.useState({});
+  const userId = userInfo.id;
   const navigate = useNavigate();
   const {
     data: assistants,
@@ -82,6 +84,14 @@ const Profile = () => {
     message: "",
     severity: "success",
   });
+
+  React.useEffect(() => {
+    get({ url: GODAR_REQUEST_URL + "/loginRegister/getUserInfo" }).then(
+      ({ data }) => {
+        setUserInfo(data);
+      }
+    );
+  }, []);
 
   // 确保assistants是数组
   const assistantsList = Array.isArray(assistants) ? assistants : [];
@@ -315,15 +325,15 @@ const Profile = () => {
               }}
             >
               <Avatar
-                src={user?.avatar}
-                alt={user?.name}
+                src={userInfo.avatar}
+                alt={userInfo.accountName}
                 sx={{ width: 120, height: 120, mb: 2 }}
               />
               <Typography variant="h5" fontWeight="bold">
-                {user?.name || "用户名"}
+                {userInfo.accountName || "用户名"}
               </Typography>
               <Chip
-                label={`${user?.tokens || 0} Tokens`}
+                label={`${userInfo.tokens || 0} Tokens`}
                 color="primary"
                 sx={{ mt: 1 }}
               />
@@ -342,14 +352,16 @@ const Profile = () => {
 
             <ProfileInfoItem>
               <EmailIcon />
-              <Typography>邮箱: {user?.email || "未设置"}</Typography>
+              <Typography>邮箱: {userInfo.email || "未设置"}</Typography>
             </ProfileInfoItem>
 
-            <ProfileInfoItem>
-              <Typography variant="body2" color="text.secondary">
-                账户创建于: 2025年3月15日
-              </Typography>
-            </ProfileInfoItem>
+            {userInfo.createTime && (
+              <ProfileInfoItem>
+                <Typography variant="body2" color="text.secondary">
+                  账户创建于: {formatDate(userInfo.createTime)}
+                </Typography>
+              </ProfileInfoItem>
+            )}
           </Paper>
         </Grid>
 

@@ -9,8 +9,12 @@ import React from "react";
 
 const Modal = React.forwardRef(({ children, title, onConfirm }, ref) => {
   const [isOpen, setIsOpen] = React.useState(false);
+  const dataRef = React.useRef({});
 
-  const handleToggle = () => {
+  const handleToggle = (data) => {
+    if (data != null) {
+      dataRef.current = data;
+    }
     setIsOpen(!isOpen);
   };
 
@@ -27,7 +31,12 @@ const Modal = React.forwardRef(({ children, title, onConfirm }, ref) => {
   return (
     <Dialog open={isOpen}>
       <DialogTitle>{title}</DialogTitle>
-      <DialogContent>{children}</DialogContent>
+      <DialogContent>
+        {React.cloneElement(children, {
+          toggleModal: handleToggle,
+          data: dataRef.current,
+        })}
+      </DialogContent>
       <DialogActions>
         <Button onClick={handleToggle}>取消</Button>
         <Button onClick={handleConfirm}>确认</Button>
