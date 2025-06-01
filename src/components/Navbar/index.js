@@ -23,9 +23,10 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { useAuth } from "../../contexts/AuthContext";
-import { _delete, post } from "../../utils/request";
+import { _delete, get, post } from "../../utils/request";
 import { GODAR_REQUEST_URL } from "../../config";
 import localStorage from "../../utils/storage";
+import useSWR from "swr";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   background: "#FFFFFF",
@@ -132,6 +133,19 @@ function Navbar() {
   const [userMenuAnchor, setUserMenuAnchor] = useState(null);
   const userToken = localStorage.get("userToken");
   const isAuthenticated = !!userToken;
+  const [userInfo, setUserInfo] = React.useState({});
+
+  React.useEffect(() => {
+    const userId = localStorage.get("userId");
+    if (!userId) {
+      get({ url: GODAR_REQUEST_URL + "/loginRegister/getUserInfo" }).then(
+        ({ data }) => {
+          setUserInfo(data);
+          localStorage.set("userId", data.id);
+        }
+      );
+    }
+  }, []);
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === "en" ? "zh" : "en");
@@ -173,8 +187,8 @@ function Navbar() {
         {isAuthenticated ? (
           <>
             <UserInfo onClick={handleUserMenuOpen}>
-              <UserAvatar src={user?.avatar} alt={user?.name} />
-              <UserName>{user?.name}</UserName>
+              <UserAvatar src={userInfo?.avatar} alt={userInfo?.accountName} />
+              <UserName>{userInfo?.accountName}</UserName>
               <KeyboardArrowDownIcon
                 sx={{ color: "#666666", fontSize: 20, ml: 0.5 }}
               />

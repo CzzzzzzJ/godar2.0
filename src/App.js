@@ -67,56 +67,56 @@ function App() {
   const [registrationStatus, setRegistrationStatus] = React.useState("");
   const [openSnackbar, setOpenSnackbar] = React.useState(false);
 
-  useEffect(() => {
-    const initNacos = async () => {
-      try {
-        // 注册服务
-        await registerService();
+  // useEffect(() => {
+  //   const initNacos = async () => {
+  //     try {
+  //       // 注册服务
+  //       await registerService();
 
-        // 延迟2秒后检查状态
-        setTimeout(async () => {
-          try {
-            const status = await checkServiceStatus();
-            if (status && status.hosts && status.hosts.length > 0) {
-              setRegistrationStatus("success");
-            } else {
-              setRegistrationStatus("error");
-            }
-          } catch (statusError) {
-            console.error("Nacos status check error:", statusError);
-            // 在生产环境中，如果是HTTPS相关问题，不显示错误通知
-            if (
-              process.env.NODE_ENV === "production" &&
-              window.isSecureContext &&
-              (statusError.message.includes("Mixed Content") ||
-                statusError.message.includes("Failed to fetch"))
-            ) {
-              console.warn("HTTPS环境下无法连接HTTP服务，跳过错误显示");
-              return;
-            }
-            setRegistrationStatus("error");
-          }
-          setOpenSnackbar(true);
-        }, 2000);
-      } catch (error) {
-        console.error("Nacos registration error:", error);
-        // 在生产环境中，如果是HTTPS相关问题，不显示错误通知
-        if (
-          process.env.NODE_ENV === "production" &&
-          window.isSecureContext &&
-          (error.message.includes("Mixed Content") ||
-            error.message.includes("Failed to fetch"))
-        ) {
-          console.warn("HTTPS环境下无法连接HTTP服务，跳过错误显示");
-          return;
-        }
-        setRegistrationStatus("error");
-        setOpenSnackbar(true);
-      }
-    };
+  //       // 延迟2秒后检查状态
+  //       setTimeout(async () => {
+  //         try {
+  //           const status = await checkServiceStatus();
+  //           if (status && status.hosts && status.hosts.length > 0) {
+  //             setRegistrationStatus("success");
+  //           } else {
+  //             setRegistrationStatus("error");
+  //           }
+  //         } catch (statusError) {
+  //           console.error("Nacos status check error:", statusError);
+  //           // 在生产环境中，如果是HTTPS相关问题，不显示错误通知
+  //           if (
+  //             process.env.NODE_ENV === "production" &&
+  //             window.isSecureContext &&
+  //             (statusError.message.includes("Mixed Content") ||
+  //               statusError.message.includes("Failed to fetch"))
+  //           ) {
+  //             console.warn("HTTPS环境下无法连接HTTP服务，跳过错误显示");
+  //             return;
+  //           }
+  //           setRegistrationStatus("error");
+  //         }
+  //         setOpenSnackbar(true);
+  //       }, 2000);
+  //     } catch (error) {
+  //       console.error("Nacos registration error:", error);
+  //       // 在生产环境中，如果是HTTPS相关问题，不显示错误通知
+  //       if (
+  //         process.env.NODE_ENV === "production" &&
+  //         window.isSecureContext &&
+  //         (error.message.includes("Mixed Content") ||
+  //           error.message.includes("Failed to fetch"))
+  //       ) {
+  //         console.warn("HTTPS环境下无法连接HTTP服务，跳过错误显示");
+  //         return;
+  //       }
+  //       setRegistrationStatus("error");
+  //       setOpenSnackbar(true);
+  //     }
+  //   };
 
-    initNacos();
-  }, []);
+  //   initNacos();
+  // }, []);
 
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
@@ -148,7 +148,7 @@ function App() {
               <MainContent />
             </Box>
           </Box>
-          <Snackbar
+          {/* <Snackbar
             open={openSnackbar}
             autoHideDuration={6000}
             onClose={handleCloseSnackbar}
@@ -162,7 +162,7 @@ function App() {
                 ? "Nacos服务注册成功"
                 : "Nacos服务注册失败，请检查网络连接"}
             </Alert>
-          </Snackbar>
+          </Snackbar> */}
         </Router>
       </AuthProvider>
     </ThemeProvider>

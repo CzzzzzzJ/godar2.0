@@ -30,8 +30,11 @@ import {
 import useSWRMutation from "swr/mutation";
 import useSWR from "swr";
 import Modal from "../../components/Modal";
-import KnowledgeCategoryForm from "./components/KnowledgeDocumentForm";
+import KnowledgeCategoryForm from "./components/KnowledgeCategoryForm";
 import KnowledgeDocumentForm from "./components/KnowledgeDocumentForm";
+import { get } from "../../utils/request";
+import { GODAR_REQUEST_URL } from "../../config";
+import DocumentList from "./components/DocumentList";
 
 const PageContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4, 0),
@@ -244,18 +247,60 @@ const PageButton = styled(Button)(({ theme, active }) => ({
   },
 }));
 
+// // 模拟知识库数据
+// const mockKnowledgeBase = [
+//   {
+//     id: 1,
+//     title: "市场营销策略",
+//     description: "收集整理市场分析报告和营销策略方案",
+//     date: "2023-12-10",
+//     filesCount: 15,
+//   },
+//   {
+//     id: 2,
+//     title: "技术研发资料",
+//     description: "核心技术文档和研发成果记录",
+//     date: "2023-12-05",
+//     filesCount: 42,
+//   },
+//   {
+//     id: 3,
+//     title: "人力资源制度",
+//     description: "公司人事制度和员工手册文档",
+//     date: "2023-11-28",
+//     filesCount: 19,
+//   },
+//   {
+//     id: 4,
+//     title: "财务管理规范",
+//     description: "财务制度和税务流程指南",
+//     date: "2023-11-25",
+//     filesCount: 23,
+//   },
+// ];
+
 function AISettings() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const userId = user?.id || "user123";
   const params = useParams();
   const modalRef = React.useRef();
   const documentModalRef = React.useRef();
+  const [userInfo, setUserInfo] = React.useState({});
+  const userId = userInfo.id;
+  const [categoryId, setCategoryId] = React.useState();
 
-  const { trigger: getKnowledges, data: knowledges } = useSWRMutation(
-    `/Knowledge/categories/${params.assistantId}`,
-    getFetcher
-  );
+  React.useEffect(() => {
+    get({ url: GODAR_REQUEST_URL + "/loginRegister/getUserInfo" }).then(
+      ({ data }) => {
+        setUserInfo(data);
+      }
+    );
+  }, []);
+
+  const { trigger: getKnowledgeCategories, data: knowledgeCategoryList } =
+    useSWRMutation(
+      params.assistantId ? `/Knowledge/categories/${params.assistantId}` : null,
+      getFetcher
+    );
 
   const { trigger: postKnowledgeDocuments } = useSWRMutation(
     `/Knowledge/documents`,
@@ -332,10 +377,10 @@ function AISettings() {
   React.useEffect(() => {
     if (params.assistantId) {
       getAssistantDetails();
-      getKnowledges();
+      getKnowledgeCategories();
       // getQuestions();
     }
-  }, [params.assistantId, getAssistantDetails, getKnowledges]);
+  }, [params.assistantId, getAssistantDetails, getKnowledgeCategories]);
 
   // 表单状态
   const [settings, setSettings] = useState({
@@ -355,10 +400,6 @@ function AISettings() {
     severity: "success",
   });
 
-  const handleCreateDocument = () => {
-    documentModalRef.current?.onToggle();
-  };
-
   const handleCreateKnowledge = () => {
     modalRef.current?.onToggle();
     // postKnowledgeDocuments({
@@ -369,38 +410,6 @@ function AISettings() {
     //   FilePath: "string",
     // });
   };
-
-  // 模拟知识库数据
-  const mockKnowledgeBase = [
-    {
-      id: 1,
-      title: "市场营销策略",
-      description: "收集整理市场分析报告和营销策略方案",
-      date: "2023-12-10",
-      filesCount: 15,
-    },
-    {
-      id: 2,
-      title: "技术研发资料",
-      description: "核心技术文档和研发成果记录",
-      date: "2023-12-05",
-      filesCount: 42,
-    },
-    {
-      id: 3,
-      title: "人力资源制度",
-      description: "公司人事制度和员工手册文档",
-      date: "2023-11-28",
-      filesCount: 19,
-    },
-    {
-      id: 4,
-      title: "财务管理规范",
-      description: "财务制度和税务流程指南",
-      date: "2023-11-25",
-      filesCount: 23,
-    },
-  ];
 
   // 处理表单字段变更
   const handleChange = (field) => (event) => {
@@ -473,6 +482,10 @@ function AISettings() {
     }));
   };
 
+  const handleEnterCategory = (data) => () => {
+    setCategoryId(data);
+  };
+
   return (
     <PageContainer>
       <Container maxWidth="lg">
@@ -491,7 +504,9 @@ function AISettings() {
               </CameraIconWrapper>
             </AvatarWrapper>
             <UserInfo>
-              <Typography className="name">{user?.name || "用户名"}</Typography>
+              <Typography className="name">
+                {userInfo.name || "用户名"}
+              </Typography>
               <Typography className="title">AI助手创建者</Typography>
             </UserInfo>
           </ProfileSection>
@@ -561,30 +576,33 @@ function AISettings() {
 
         <Section>
           <SectionTitle>知识库管理</SectionTitle>
-          <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
-            <SearchField
-              fullWidth
-              placeholder="搜索知识库..."
-              value={settings.searchQuery}
-              onChange={handleChange("searchQuery")}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon color="action" />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <ActionButtons>
-              <ActionButton
-                variant="contained"
-                color="primary"
-                startIcon={<span className="icon">+</span>}
-                onClick={handleCreateKnowledge}
-              >
-                新建分类
-              </ActionButton>
-              <ActionButton
+
+          {!categoryId ? (
+            <React.Fragment>
+              <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                <SearchField
+                  fullWidth
+                  placeholder="搜索知识库..."
+                  value={settings.searchQuery}
+                  onChange={handleChange("searchQuery")}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <SearchIcon color="action" />
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <ActionButtons>
+                  <ActionButton
+                    variant="contained"
+                    color="primary"
+                    startIcon={<span className="icon">+</span>}
+                    onClick={handleCreateKnowledge}
+                  >
+                    新建分类
+                  </ActionButton>
+                  {/* <ActionButton
                 variant="contained"
                 color="primary"
                 startIcon={<span className="icon">↑</span>}
@@ -598,24 +616,29 @@ function AISettings() {
                 startIcon={<span className="icon">⇧</span>}
               >
                 上传bot
-              </ActionButton>
-            </ActionButtons>
-          </Box>
-
-          {knowledges?.length > 0 && (
-            <React.Fragment>
-              <KnowledgeGrid>
-                {knowledges.map((item) => (
-                  <KnowledgeCard key={item.id}>
-                    <CardTitle>
-                      {item.title}
-                      <EditIcon
-                        fontSize="small"
-                        sx={{ color: "#666666", cursor: "pointer" }}
-                      />
-                    </CardTitle>
-                    <CardDescription>{item.description}</CardDescription>
-                    <CardFooter>
+              </ActionButton> */}
+                </ActionButtons>
+              </Box>
+              {knowledgeCategoryList?.length > 0 && (
+                <React.Fragment>
+                  <KnowledgeGrid>
+                    {knowledgeCategoryList.map((item) => (
+                      <KnowledgeCard
+                        key={item.id}
+                        onClick={handleEnterCategory(item.CategoryId)}
+                      >
+                        <CardTitle>
+                          {item.CategoryName}
+                          <EditIcon
+                            onClick={() => {
+                              modalRef.current.onToggle(item);
+                            }}
+                            fontSize="small"
+                            sx={{ color: "#666666", cursor: "pointer" }}
+                          />
+                        </CardTitle>
+                        <CardDescription>{item.Description}</CardDescription>
+                        {/* <CardFooter>
                       <CardStats>
                         <span>📅 {item.date}</span>
                         <span>📄 {item.filesCount} 个文档</span>
@@ -628,19 +651,23 @@ function AISettings() {
                           <DeleteIcon fontSize="small" />
                         </IconButton>
                       </CardActions>
-                    </CardFooter>
-                  </KnowledgeCard>
-                ))}
-              </KnowledgeGrid>
+                    </CardFooter> */}
+                      </KnowledgeCard>
+                    ))}
+                  </KnowledgeGrid>
 
-              <Pagination>
-                <Button size="small">上一页</Button>
-                <PageButton active={true}>1</PageButton>
-                <PageButton>2</PageButton>
-                <PageButton>3</PageButton>
-                <Button size="small">下一页</Button>
-              </Pagination>
+                  <Pagination>
+                    <Button size="small">上一页</Button>
+                    <PageButton active={true}>1</PageButton>
+                    <PageButton>2</PageButton>
+                    <PageButton>3</PageButton>
+                    <Button size="small">下一页</Button>
+                  </Pagination>
+                </React.Fragment>
+              )}
             </React.Fragment>
+          ) : (
+            <DocumentList categoryId={categoryId} />
           )}
         </Section>
 
@@ -685,10 +712,7 @@ function AISettings() {
         </Alert>
       </Snackbar>
       <Modal ref={modalRef} title="新建分类">
-        <KnowledgeCategoryForm />
-      </Modal>
-      <Modal ref={documentModalRef} title="新建文档">
-        <KnowledgeDocumentForm />
+        <KnowledgeCategoryForm onRefresh={getKnowledgeCategories} />
       </Modal>
     </PageContainer>
   );
