@@ -70,8 +70,8 @@ http.interceptors.response.use(
       return res.data;
     }
 
-    if (status === 401) {
-      window.location.href = "/signin";
+    if (code === 401) {
+      window.location.href = "/login";
       return;
     }
 
