@@ -137,6 +137,7 @@ function Navbar() {
 
   React.useEffect(() => {
     const userId = localStorage.get("userId");
+    console.log(userId);
     if (!userId) {
       get({ url: GODAR_REQUEST_URL + "/loginRegister/getUserInfo" }).then(
         ({ data }) => {

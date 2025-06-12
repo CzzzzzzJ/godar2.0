@@ -33,8 +33,9 @@ import Modal from "../../components/Modal";
 import KnowledgeCategoryForm from "./components/KnowledgeCategoryForm";
 import KnowledgeDocumentForm from "./components/KnowledgeDocumentForm";
 import { get } from "../../utils/request";
-import { GODAR_REQUEST_URL } from "../../config";
+import { GODAR_REQUEST_FILE_URL, GODAR_REQUEST_URL } from "../../config";
 import DocumentList from "./components/DocumentList";
+import localStorage from "../../utils/storage";
 
 const PageContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(4, 0),
@@ -246,6 +247,18 @@ const PageButton = styled(Button)(({ theme, active }) => ({
       : "rgba(0, 0, 0, 0.04)",
   },
 }));
+
+const VisuallyHiddenInput = styled("input")({
+  clip: "rect(0 0 0 0)",
+  clipPath: "inset(50%)",
+  height: 1,
+  overflow: "hidden",
+  position: "absolute",
+  bottom: 0,
+  left: 0,
+  whiteSpace: "nowrap",
+  width: 1,
+});
 
 // // 模拟知识库数据
 // const mockKnowledgeBase = [
@@ -486,6 +499,22 @@ function AISettings() {
     setCategoryId(data);
   };
 
+  const handleUpload = (event) => {
+    const userToken = localStorage.get("userToken");
+    const { files } = event.target;
+    const file = files[0];
+    console.log(file);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    fetch(GODAR_REQUEST_FILE_URL + "/upload", {
+      method: "POST",
+      body: formData,
+      headers: { Authorization: `Bearer ${userToken}` },
+    });
+  };
+
   return (
     <PageContainer>
       <Container maxWidth="lg">
@@ -497,7 +526,8 @@ function AISettings() {
           <ProfileSection>
             <AvatarWrapper>
               <StyledAvatar>
-                <CameraAltIcon />
+                <CameraAltIcon onClick={handleUpload} />
+                <input type="file" onChange={handleUpload} />
               </StyledAvatar>
               <CameraIconWrapper>
                 <CameraAltIcon fontSize="small" />
