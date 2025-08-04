@@ -156,8 +156,6 @@ function Messages() {
     navigate(`/chat/${assistantId}?conversationId=${conversationId}`);
   };
 
-  console.log(data);
-
   return (
     <PageContainer>
       <TopSection>
