@@ -248,9 +248,7 @@ function TokenSettings() {
     get({
       url: GODAR_REQUEST_URL + "/expert/token/flow/list",
     }).then(({ data }) => {
-      if (data) {
-        setTokens(data);
-      }
+      setTokens(data.rows);
     });
   }, []);
 

@@ -63,11 +63,12 @@ http.interceptors.response.use(
       // return;
     }
 
+    console.log(res, code === 401);
     // console.log(res.data, msg);
 
     // success
     if (status === 200) {
-      return res.data;
+      return res.data || {};
     }
 
     if (code === 401) {
@@ -116,7 +117,13 @@ http.interceptors.response.use(
 export const request = (config) => {
   return http
     .request(config)
-    .then((res) => res)
+    .then((res) => {
+      console.log(55, res);
+      if (Array.isArray(res)) {
+        return res;
+      }
+      return res.code === 200 ? { data: res } : { data: {} };
+    })
     .catch((msg) => {
       // toast.error(msg);
       return Promise.reject(msg);
